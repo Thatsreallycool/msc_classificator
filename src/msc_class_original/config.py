@@ -17,7 +17,9 @@ class Config:
                 "test_data": "out-mr.csv"
             },
             "save": {
-                "placeholder_index": "my_index.json"
+                "pred_text": f"pred_text_{self.nr_msc_cutoff}",
+                "pred_keyword": f"pred_keyword_{self.nr_msc_cutoff}",
+                "pred_refs": f"pred_refs_{self.nr_msc_cutoff}"
             }
         }
         self.filepaths = {

@@ -7,4 +7,4 @@ index_file = "../stored/keyword_msc_idx.json"
 classify = Classification(
     index_filepath=index_file
 )
-print(classify.execute())
+print(classify.execute(pred_basis='text'))
