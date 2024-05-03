@@ -1,6 +1,11 @@
 # msc_fine_grained
 This package contains a linear mapping between keywords and msc categories, 
-based on ...
+based on ... (placeholder text).
+
+Please note that all run example codes treat the source code as a normal 
+python package, so you need to install it first in your virtuel environment, 
+before running the scripts or consider writing your own scripts (see 
+Installation Manual below).
 
 ## Package requirements
 Please create your virtual environment with package versions compatible with 
@@ -23,10 +28,13 @@ for dev purposes (from main folder)
 
 ## Coding Logic
 ### msc_class_original
-#### Creating Index Matrix
-1. first check if all filepaths in config are set for loading 
-   1. training_data
-2. ./run/gen_index.py contains example code to run the generation process
+#### check if all configured correctly
+- ./run/check_config.py
+- first check if all filepaths in config are set for loading 
+   - training_data
+
+#### Creating Index Matrix 
+- ./run/gen_index.py contains example code to run the generation process
    1. parameters: 
       1. index_category: 'keyword, 'refs' (, 'text', 'title')
       2. km: create index mapper(dict) from entities(keys) to classes(values)
