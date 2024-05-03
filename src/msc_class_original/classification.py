@@ -368,14 +368,14 @@ class Evaluate(Caretaker):
             mscs_dict['mscs_mr'] = mrmscs_dict[str(de)]
 
             # mscs (zbmath) = competitor
-            mscs_zbmath = prediction_table_text['mscs_actual'][idx]
+            mscs_zbmath = prediction_table_text['actual'][idx]
             mscs_dict['mscs_human_baseline'] = mscs_zbmath.replace(
                 "'",
                 ""
             ).lstrip('[').rstrip(']').strip().split(', ')
 
             # mscs (predicted_text) = competitor
-            mscs_predicted_text = prediction_table_text['mscs_predicted'][idx]
+            mscs_predicted_text = prediction_table_text['predicted'][idx]
             mscs_dict['mscs_predicted_text'] = mscs_predicted_text.replace(
                 "'",
                 ""
@@ -420,7 +420,7 @@ class Evaluate(Caretaker):
 
                     mscs_predicted_full = mscs_dict[mscs_origin]
 
-                    for i in range(nr_mscs_cutoff + 1):
+                    for i in range(self.config.nr_msc_cutoff + 1):
                         mscs_predicted = mscs_predicted_full[:i]
                         # https://stats.stackexchange.com/questions/21551/
                         # how-to-compute-precision-recall-for-multiclass-
