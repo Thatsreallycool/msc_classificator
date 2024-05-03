@@ -26,8 +26,11 @@ from abc import ABC, abstractmethod
 class Caretaker(ABC):
     def __init__(self, index_filepath: str):
         """
-        purpose: for reusing methods
+        purpose: universal class for reusing methods, cannot be initiated
 
+        :param index_filepath: relative or absolute filepath for generated
+        index. taken out from config, so that different instances (i.e.
+        indexes) can be run, compared and analysed independently.
         """
         super().__init__()
         self.user_config = Config()
@@ -36,6 +39,12 @@ class Caretaker(ABC):
 
     @staticmethod
     def load_indexes(index_filepath: str):
+        """
+
+        :param index_filepath:  relative or absolute filepath for generated
+        index
+        :return: index as nested dictionary (entity -> class or class -> entity)
+        """
         print('Loading index ' + index_filepath)
         if os.path.isfile(index_filepath):
             with open(index_filepath, 'r') as f:
@@ -45,45 +54,13 @@ class Caretaker(ABC):
             raise Exception("no file found")
 
 
-class Evaluate(Caretaker):
-    def print_index_statistics(self, index_name: str, index_data: dict):
-        print('\nStats of index ' + index_name)
-
-        idx_avg_count = self.get_mean_count(index_data)
-        print('Average entry per key count: ' + str(idx_avg_count))
-
-        idx_avg_entropy = self.get_mean_entropy(index_data)
-        print('Average entry per key entropy: ' + str(idx_avg_entropy))
-
-        print('\n')
-        return 0
-
-    def get_mean_entropy(self):
-        """
-        # entropy
-        :return:
-        """
-        entropies = []
-        for cls in self.index.values():
-            frequencies = [ent for ent in cls.values()]
-            entropies.append(scipy.stats.entropy(frequencies))
-        avg_entropy = np.mean(entropies)
-        return avg_entropy
-
-    def get_mean_count(self):
-        """
-        # average length
-        :return:
-        """
-        lengths = [
-            len(item)
-            for item in self.index.values()
-        ]
-        return np.mean(lengths)
-
-
 class Classification(Caretaker):
     def execute(self):
+        """
+        after initiating this class (init from Caretaker) the index is
+        already loaded and here the test data defined in config is
+        :return: a dict mapping: de -> 10 MSCs ordered by importance
+        """
         test_data = self.load_test_data(
             filepath=self.user_config.filepaths["load"]["test_data"],
             delimiter=','
@@ -95,6 +72,13 @@ class Classification(Caretaker):
         )
 
     def predict_entity_msc(self, test_data, index):
+        """
+        core function to map(by index) the text of test_data to MSCs
+
+        :param test_data: test data from msc (defined in config)
+        :param index: mapping from text -> MSCs (loaded by init)
+        :return: map from de number (from test data set) -> MSCs
+        """
         prediction_table = pandas.DataFrame(
             columns=[
                 'de',
@@ -175,6 +159,12 @@ class Classification(Caretaker):
         return mscs_predicted
 
     def get_mscs(self, table, idx):
+        """
+        retrieve msc array from tables row
+        :param table: table with column "msc"
+        :param idx: row number
+        :return:
+        """
         mscs = []
         for msc in self.clean(table['msc'][idx]).split():
             msc = msc.strip(',')
@@ -183,6 +173,11 @@ class Classification(Caretaker):
 
     @staticmethod
     def clean(string):
+        """
+        cleaning of certain strings from special characters
+        :param string: string with characters [,],\\,'
+        :return: cleaned string
+        """
         if not isinstance(string, str):
             return ""
         return string.replace(
@@ -197,6 +192,12 @@ class Classification(Caretaker):
 
     @staticmethod
     def load_test_data(filepath: str, delimiter: str):
+        """
+        load data from csv file
+        :param filepath: local file path
+        :param delimiter: delimiter in csv file
+        :return: pandas data frame
+        """
         return pandas.read_csv(
             filepath,
             delimiter=delimiter
@@ -204,6 +205,48 @@ class Classification(Caretaker):
 
     @staticmethod
     def get_data_from_txt(filepath: str):
+        """
+        get data from text file
+        :param filepath: local file path
+        :return: data from text file as list
+        """
         with open(filepath, 'r') as f2:
             txt_data = f2.readlines()
         return txt_data
+
+
+class Evaluate(Caretaker):
+    def print_index_statistics(self, index_name: str, index_data: dict):
+        print('\nStats of index ' + index_name)
+
+        idx_avg_count = self.get_mean_count(index_data)
+        print('Average entry per key count: ' + str(idx_avg_count))
+
+        idx_avg_entropy = self.get_mean_entropy(index_data)
+        print('Average entry per key entropy: ' + str(idx_avg_entropy))
+
+        print('\n')
+        return 0
+
+    def get_mean_entropy(self):
+        """
+        # entropy
+        :return:
+        """
+        entropies = []
+        for cls in self.index.values():
+            frequencies = [ent for ent in cls.values()]
+            entropies.append(scipy.stats.entropy(frequencies))
+        avg_entropy = np.mean(entropies)
+        return avg_entropy
+
+    def get_mean_count(self):
+        """
+        # average length
+        :return:
+        """
+        lengths = [
+            len(item)
+            for item in self.index.values()
+        ]
+        return np.mean(lengths)
