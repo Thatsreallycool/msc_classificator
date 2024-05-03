@@ -54,8 +54,8 @@ class Caretaker(ABC):
         else:
             raise Exception("no file found")
 
+    @staticmethod
     def store_df(
-            self,
             data_filepath: str,
             data: dict,
             header: list
@@ -76,7 +76,7 @@ class Caretaker(ABC):
             }
             df = df.append(new_row, ignore_index=True)
 
-        store_filename = f"{data_filepath}.csv"
+        store_filename = data_filepath
         if os.path.isfile(store_filename):
             os.remove(store_filename)
         df.to_csv(store_filename)
@@ -84,6 +84,19 @@ class Caretaker(ABC):
             return True
         else:
             return False
+
+    @staticmethod
+    def retrieve_df(
+            df_filepath: str
+    ):
+        return pandas.read_csv(df_filepath)
+
+    @staticmethod
+    def retrieve_json(
+            json_filepath: str
+    ):
+        with open(json_filepath, 'r') as f:
+            return json.load(f)
 
 
 class Classification(Caretaker):
@@ -307,36 +320,41 @@ class Evaluate(Caretaker):
 
     def get_precision_recall_curves(self):
         # load prediction tables
-        prediction_table_text = pd.read_csv(
-            f'data/mscs_prediction_table_text_cutoff.csv'
+        prediction_table_text = self.retrieve_df(
+            df_filepath=self.config.filepaths["save"]["pred_text"]
         )
-        prediction_table_keywords = pd.read_csv(
-            'data/mscs_prediction_table_keywords_cutoff' + str(
-                nr_mscs_cutoff) + '.csv')
-        prediction_table_references = pd.read_csv(
-            'data/mscs_prediction_table_references_cutoff' + str(
-                nr_mscs_cutoff) + '.csv')
+        prediction_table_keywords = self.retrieve_df(
+            df_filepath=self.config.filepaths["save"]["pred_keyword"]
+        )
+        prediction_table_references = self.retrieve_df(
+            df_filepath=self.config.filepaths["save"]["pred_refs"]
+        )
 
         # load mrmscs baseline
-        with open('data/mrmscs_dict.json', 'r') as f:
-            mrmscs_dict = json.load(f)
+        mrmscs_dict = self.retrieve_json(
+            json_filepath=self.config.filepaths["load"]["mrmscs"]
+        )
 
         # evaluate predictions
         # ir measures
         # baseline = mscs (mr)
         # competing origins = predicted vs. zbmath
-        mscs_origins = ['mscs_human_baseline', 'mscs_predicted_text',
-                        'mscs_predicted_keywords', 'mscs_predicted_references']
-        precision_recall = {mscs_origins[0]: {}, mscs_origins[1]: {},
-                            mscs_origins[2]: {}, mscs_origins[3]: {}}
+        precision_recall = {
+            'mscs_human_baseline': {},
+            'mscs_predicted_text': {},
+            'mscs_predicted_keywords': {},
+            'mscs_predicted_references': {}
+        }
 
-        # len(prediction_table_text) < len(prediction_table_keywords) : text not always available
+        # len(prediction_table_text) < len(prediction_table_keywords) :
+        # text not always available
 
         latest_progress = 0
         for idx in range(len(prediction_table_text)):
             # print(idx / len(prediction_table_text))
             current_progress = round(idx / len(prediction_table_text) * 100, 1)
-            if current_progress != latest_progress and current_progress % 10 == 0:
+            if current_progress != latest_progress \
+                    and current_progress % 10 == 0:
                 print(current_progress, '%')
                 latest_progress = current_progress
 
@@ -351,61 +369,77 @@ class Evaluate(Caretaker):
 
             # mscs (zbmath) = competitor
             mscs_zbmath = prediction_table_text['mscs_actual'][idx]
-            mscs_dict['mscs_human_baseline'] = mscs_zbmath.replace("'",
-                                                                   "").lstrip(
-                '[').rstrip(']').strip().split(', ')
+            mscs_dict['mscs_human_baseline'] = mscs_zbmath.replace(
+                "'",
+                ""
+            ).lstrip('[').rstrip(']').strip().split(', ')
 
             # mscs (predicted_text) = competitor
             mscs_predicted_text = prediction_table_text['mscs_predicted'][idx]
-            mscs_dict['mscs_predicted_text'] = mscs_predicted_text.replace("'",
-                                                                           "").lstrip(
-                '[').rstrip(']').strip().split(
-                ', ')
+            mscs_dict['mscs_predicted_text'] = mscs_predicted_text.replace(
+                "'",
+                ""
+            ).lstrip(
+                '[').rstrip(']').strip().split(', ')
 
             # mscs (predicted_keywords) = competitor
             idxx = prediction_table_keywords.index[
-                prediction_table_keywords['de'] == de]
+                prediction_table_keywords['de'] == de
+                ]
             idxx = idxx.tolist()[0]
             # idxx != idx because prediction tables are not in same order
             mscs_predicted_keywords = \
             prediction_table_keywords['mscs_predicted'][idxx]
             mscs_dict[
-                'mscs_predicted_keywords'] = mscs_predicted_keywords.replace(
-                "'", "").lstrip('[').rstrip(
-                ']').strip().split(', ')
+                'mscs_predicted_keywords'
+            ] = mscs_predicted_keywords.replace(
+                "'", ""
+            ).lstrip('[').rstrip(']').strip().split(', ')
 
             # mscs (predicted_references) = competitor
             idxx = prediction_table_references.index[
-                prediction_table_references['de'] == de]
+                prediction_table_references['de'] == de
+            ]
             try:
                 idxx = idxx.tolist()[0]
                 # idxx != idx because prediction tables are not in same order
                 mscs_predicted_references = \
                 prediction_table_references['mscs_predicted'][idxx]
+
                 mscs_dict[
-                    'mscs_predicted_references'] = mscs_predicted_references.replace(
-                    "'", "").lstrip('[').rstrip(
-                    ']').strip().split(', ')
+                    'mscs_predicted_references'
+                ] = mscs_predicted_references.replace(
+                    "'",
+                    ""
+                ).lstrip('[').rstrip(']').strip().split(', ')
 
                 # mscs (actual) = baseline
                 mscs_actual = mscs_dict['mscs_mr']
 
-                for mscs_origin in mscs_origins:
+                for mscs_origin in precision_recall.keys():
 
                     mscs_predicted_full = mscs_dict[mscs_origin]
 
                     for i in range(nr_mscs_cutoff + 1):
                         mscs_predicted = mscs_predicted_full[:i]
-                        # https://stats.stackexchange.com/questions/21551/how-to-compute-precision-recall-for-multiclass-multilabel-classification
-                        # precision = ratio of how much of the predicted is correct
-                        mscs_intersection = [msc for msc in mscs_predicted if
-                                             msc in mscs_actual]
+                        # https://stats.stackexchange.com/questions/21551/
+                        # how-to-compute-precision-recall-for-multiclass-
+                        # multilabel-classification
+                        # precision = ratio of how much of the predicted is
+                        # correct
+                        mscs_intersection = [
+                            msc
+                            for msc in mscs_predicted
+                            if msc in mscs_actual
+                        ]
                         if len(mscs_predicted) > 0:
                             precision = len(mscs_intersection) / len(
-                                mscs_predicted)
+                                mscs_predicted
+                            )
                         else:
                             precision = 1
-                        # recall = ratio of how many of the actual labels were predicted
+                        # recall = ratio of how many of the actual labels were
+                        # predicted
                         if len(mscs_actual) > 0:
                             recall = len(mscs_intersection) / len(mscs_actual)
                         else:
@@ -413,20 +447,26 @@ class Evaluate(Caretaker):
 
                         try:
                             precision_recall[mscs_origin][i][
-                                'precisions'].append(precision)
-                            precision_recall[mscs_origin][i]['recalls'].append(
-                                recall)
+                                'precisions'
+                            ].append(precision)
+                            precision_recall[
+                                mscs_origin
+                            ][i]['recalls'].append(recall)
                         except:
                             try:
-                                precision_recall[mscs_origin][i][
-                                    'precisions'] = [precision]
-                                precision_recall[mscs_origin][i]['recalls'] = [
-                                    recall]
+                                precision_recall[
+                                    mscs_origin
+                                ][i]['precisions'] = [precision]
+                                precision_recall[
+                                    mscs_origin
+                                ][i]['recalls'] = [recall]
                             except:
                                 precision_recall[mscs_origin][i] = {
-                                    'precisions': [precision]}
+                                    'precisions': [precision]
+                                }
                                 precision_recall[mscs_origin][i] = {
-                                    'recalls': [recall]}
+                                    'recalls': [recall]
+                                }
 
             except:
                 pass
@@ -435,7 +475,7 @@ class Evaluate(Caretaker):
         # precision-recall curve
         fig, ax = plt.subplots()
         # collect metrics for plot
-        for mscs_origin in mscs_origins:
+        for mscs_origin in precision_recall.keys():
 
             pr_rc = precision_recall[mscs_origin]
             precisions = []
@@ -446,10 +486,19 @@ class Evaluate(Caretaker):
                 precisions.append(np.mean(p_r[1]['precisions']))
                 recalls.append(np.mean(p_r[1]['recalls']))
 
-            marker_dict = {mscs_origins[0]: 'x', mscs_origins[1]: 's',
-                           mscs_origins[2]: 'o', mscs_origins[3]: '>'}
-            ax.scatter(recalls, precisions, marker=marker_dict[mscs_origin],
-                       s=10, label=mscs_origin)
+            marker_dict = dict(
+                zip(
+                    precision_recall.keys(),
+                    ['x', 's','o', '>']
+                )
+            )
+            ax.scatter(
+                recalls,
+                precisions,
+                marker=marker_dict[mscs_origin],
+                s=10,
+                label=mscs_origin
+            )
 
         plt.title('Precision-Recall (ROC) Curve')
         plt.xlabel('Recall')

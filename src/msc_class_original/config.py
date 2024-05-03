@@ -14,12 +14,14 @@ class Config:
             "load": {
                 "stopwords": "stopwords.txt",
                 "training_data": "out.csv",
-                "test_data": "out-mr.csv"
+                "test_data": "out-mr.csv",
+                "mrmscs": "mrmscs_dict.json"
+
             },
             "save": {
-                "pred_text": f"pred_text_{self.nr_msc_cutoff}",
-                "pred_keyword": f"pred_keyword_{self.nr_msc_cutoff}",
-                "pred_refs": f"pred_refs_{self.nr_msc_cutoff}"
+                "pred_text": f"pred_text_{self.nr_msc_cutoff}.csv",
+                "pred_keyword": f"pred_keyword_{self.nr_msc_cutoff}.csv",
+                "pred_refs": f"pred_refs_{self.nr_msc_cutoff}.csv"
             }
         }
         self.filepaths = {

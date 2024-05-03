@@ -20,12 +20,15 @@ see ./changelog.md
 for dev purposes (from main folder)
 `pip install zb_msc_classificator -r ./requirements.txt -e .`
 
-## Config File Editing
+## Coding Logic
+### msc_class_original
+#### Config File Editing
+- **data_folder**: create 2 local folders and enter their location 
+  - "load" for input data(stopwords, training_data, test_data). 
+  - "save" for output data(prediction_[...])
 - **filepaths**: local file paths for loading and storing data
 - **nr_msc_cutoff**: currently placeholder for later
 
-## Coding Logic
-### msc_class_original
 #### check if all configured correctly
 - ./run/check_config.py
 - first check if all filepaths in config are set for loading 
