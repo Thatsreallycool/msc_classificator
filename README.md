@@ -1,2 +1,2 @@
 # msc_classificator
-test
+test 2
