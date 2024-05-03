@@ -1,1 +1,2 @@
 # msc_classificator
+test
