@@ -3,18 +3,23 @@ This package contains a linear mapping between keywords and msc categories,
 based on ...
 
 ## Package requirements
+Please create your virtual environment with package versions compatible with 
+the following
 * nltk ~= 3.5
 * scipy ~= 1.6.0
 * numpy ~= 1.19.5
+* (pandas ~= 1.1.5)
 
 ## Changelog
 see ./changelog.md
 
 ## Installation Manual
-for dev purposes 
-`pip install zb_msc_classificator -e .`
+for dev purposes (from main folder)
+`pip install zb_msc_classificator -r ./requirements.txt -e .`
 
 ## Config File Editing
+- **filepaths**: local file paths for loading and storing data
+- **nr_msc_cutoff**: currently placeholder for later
 
 ## Coding Logic
 ### Creating Index Matrix

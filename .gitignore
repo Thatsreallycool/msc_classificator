@@ -1,0 +1,25 @@
+*.pytest_cache
+*.pyc
+fromdate.txt
+.ropeproject/
+.coverage
+*.egg-info/
+*.eggs
+*.xml
+
+# backups
+*~
+**/*~
+
+#PyCharm
+.idea
+venv
+
+# logs
+*.log
+
+# config files
+*.ini
+
+#datafolder too big for githib
+*data/
