@@ -22,8 +22,20 @@ for dev purposes (from main folder)
 - **nr_msc_cutoff**: currently placeholder for later
 
 ## Coding Logic
-### Creating Index Matrix
-- output: json
+### msc_class_original
+#### Creating Index Matrix
+1. first check if all filepaths in config are set for loading 
+   1. training_data
+2. ./run/gen_index.py contains example code to run the generation process
+   1. parameters: 
+      1. index_category: 'keyword, 'refs' (, 'text', 'title')
+      2. km: create index mapper(dict) from entities(keys) to classes(values)
+         [optional: default=True]
+      3. km: create index mapper(dict) from classes(keys) to entities(values)
+         [optional: default=False]
+      4. overwrite: overwrite existing index files 
+         [optional: default: False]
+- output: json in data_folder set in config
 
 # TODO
 - run original
