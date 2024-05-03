@@ -13,7 +13,8 @@ class Config:
         filepaths = {
             "load": {
                 "stopwords": "stopwords.txt",
-                "training_data": "out.csv"
+                "training_data": "out.csv",
+                "test_data": "out-mr.csv"
             },
             "save": {
                 "placeholder_index": "my_index.json"

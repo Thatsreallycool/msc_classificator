@@ -18,7 +18,7 @@ import scipy
 
 #from matplotlib import pyplot as plt
 
-from zbmsc_finegrained.config import Config
+from msc_class_original.config import Config
 
 from abc import ABC, abstractmethod
 
@@ -85,7 +85,7 @@ class Evaluate(Caretaker):
 class Classification(Caretaker):
     def execute(self):
         test_data = self.load_test_data(
-            filepath=self.user_config.filepaths["test_data"],
+            filepath=self.user_config.filepaths["load"]["test_data"],
             delimiter=','
         )
 
@@ -112,7 +112,7 @@ class Classification(Caretaker):
         overlap_ratios = []
 
         sstopwords = self.get_data_from_txt(
-            filepath=self.user_config.filepaths["stopwords"]
+            filepath=self.user_config.filepaths["load"]["stopwords"]
         )
 
         tot_rows = len(test_data)
