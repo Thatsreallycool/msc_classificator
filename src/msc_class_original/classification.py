@@ -157,8 +157,22 @@ class Classification(Caretaker):
                             pass
                 except:
                     pass
+            if len(mscs_predicted_stat) != 0:
+                sorted_mscs_predicted_stat = dict(
+                    sorted(
+                        mscs_predicted_stat.items(),
+                        key=lambda item: item[1], reverse=True
+                    )
+                )
+
+                # get (normalized) prediction (confidence)
+                mscs_predicted[de] = list(sorted_mscs_predicted_stat)[
+                                      :self.user_config.nr_msc_cutoff
+                                      ]
+                # cut off at fixed nr_mscs_cutoff or dynamic number
+                # #len(mscs_actual[idx])
         print("prediction finished!")
-        return mscs_predicted_stat
+        return mscs_predicted
 
     def get_mscs(self, table, idx):
         mscs = []

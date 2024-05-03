@@ -4,7 +4,7 @@ import os.path
 class Config:
     def __init__(self):
         # placeholder for later cutoff msc for categorization...
-        self.place_holder_nr_msc_cutoff = 10
+        self.nr_msc_cutoff = 10
 
         self.data_folder = {
             "load": "../data/",
