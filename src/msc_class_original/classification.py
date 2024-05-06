@@ -25,7 +25,10 @@ from abc import ABC, abstractmethod
 
 
 class Caretaker(ABC):
-    def __init__(self, index_filepath: str):
+    def __init__(
+            self,
+            index_filepath: str
+    ):
         """
         purpose: universal class for reusing methods, cannot be initiated
 
@@ -39,7 +42,9 @@ class Caretaker(ABC):
         self.index = self.load_indexes(index_filepath=index_filepath)
 
     @staticmethod
-    def load_indexes(index_filepath: str):
+    def load_indexes(
+            index_filepath: str
+    ):
         """
 
         :param index_filepath:  relative or absolute filepath for generated
@@ -100,7 +105,10 @@ class Caretaker(ABC):
 
 
 class Classification(Caretaker):
-    def execute(self, pred_basis: str):
+    def execute(
+            self,
+            pred_basis: str
+    ):
         """
         after initiating this class (init from Caretaker) the index is
         already loaded and here the test data defined in config is
@@ -232,7 +240,9 @@ class Classification(Caretaker):
         return mscs
 
     @staticmethod
-    def clean(string):
+    def clean(
+            string: str
+    ):
         """
         cleaning of certain strings from special characters
         :param string: string with characters [,],\\,'
@@ -267,7 +277,9 @@ class Classification(Caretaker):
         )
 
     @staticmethod
-    def get_data_from_txt(filepath: str):
+    def get_data_from_txt(
+            filepath: str
+    ):
         """
         get data from text file
         :param filepath: local file path
@@ -349,10 +361,18 @@ class Evaluate(Caretaker):
         # len(prediction_table_text) < len(prediction_table_keywords) :
         # text not always available
 
+        de_numbers_containing_keywords_and_texts = [
+            item
+            for item in list(prediction_table_keywords['de'])
+            if item in list(prediction_table_text['de'])
+        ]
+
         latest_progress = 0
-        for idx in range(len(prediction_table_text)):
+        for runx, de in enumerate(de_numbers_containing_keywords_and_texts):
             # print(idx / len(prediction_table_text))
-            current_progress = round(idx / len(prediction_table_text) * 100, 1)
+            current_progress = round(
+                (runx+1) / len(prediction_table_text)* 100, 1
+            )
             if current_progress != latest_progress \
                     and current_progress % 10 == 0:
                 print(current_progress, '%')
@@ -361,8 +381,9 @@ class Evaluate(Caretaker):
             # collect mscs
             mscs_dict = {}
 
-            # document nr.
-            de = prediction_table_text['de'][idx]
+            idx = prediction_table_text.index[
+                prediction_table_text['de'] == de
+            ].tolist()[0]
 
             # mscs (mr)
             mscs_dict['mscs_mr'] = mrmscs_dict[str(de)]
@@ -375,12 +396,13 @@ class Evaluate(Caretaker):
             ).lstrip('[').rstrip(']').strip().split(', ')
 
             # mscs (predicted_text) = competitor
-            mscs_predicted_text = prediction_table_text['predicted'][idx]
+            mscs_predicted_text = prediction_table_text[
+                'predicted'
+            ][idx].tolist()[0]
             mscs_dict['mscs_predicted_text'] = mscs_predicted_text.replace(
                 "'",
                 ""
-            ).lstrip(
-                '[').rstrip(']').strip().split(', ')
+            ).lstrip('[').rstrip(']').strip().split(', ')
 
             # mscs (predicted_keywords) = competitor
             idxx = prediction_table_keywords.index[

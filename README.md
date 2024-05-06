@@ -3,7 +3,7 @@ This package contains a linear mapping between keywords and msc categories,
 based on ... (placeholder text).
 
 Please note that all run example codes treat the source code as a normal 
-python package, so you need to install it first in your virtuel environment, 
+python package, so you need to install it first in your virtual environment, 
 before running the scripts or consider writing your own scripts (see 
 Installation Manual below).
 
@@ -24,10 +24,23 @@ for dev purposes (from main folder)
 ### msc_class_original
 #### Config File Editing
 - **data_folder**: create 2 local folders and enter their location 
-  - "load" for input data(stopwords, training_data, test_data). 
-  - "save" for output data(prediction_[...])
+  - __"load"__ for input data(stopwords, training_data, test_data). 
+  - __"save"__ for output data(prediction_[...])
 - **filepaths**: local file paths for loading and storing data
-- **nr_msc_cutoff**: currently placeholder for later
+  - __load__ (external files not created by code): 
+    - stopwords: text file separated by line breank
+    - training_data: csv file, delimiter "," with columns: "de", "msc", 
+      "text", "keyword", "refs"
+    - test_data: csv file, delimiter "," with columns: "de", "msc", 
+      "text", "keyword", "refs"
+    - mrmscs: json file, important for evaluation
+  - __save__ (files created by code):
+    - pred_text: csv file predicted msc categories based on abstract text 
+      entities
+    - pred_keyword: csv file predicted msc categories based on keyword entities
+    - pred_refs: csv file predicted msc categories based on reference msc entities
+      categories
+- **nr_msc_cutoff**: nr of entities considered for classification
 
 #### check if all configured correctly
 - ./run/check_config.py

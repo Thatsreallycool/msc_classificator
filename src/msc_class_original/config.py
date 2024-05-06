@@ -3,7 +3,12 @@ import os.path
 
 class Config:
     def __init__(self):
+        """
+        set file locations, classification settings, etc.
+        """
         # placeholder for later cutoff msc for categorization...
+        # TODO: if more parameters for classification needed, refactor this
+        #  into dict or object -> pydantic model for config?(!)
         self.nr_msc_cutoff = 10
 
         self.data_folder = {
@@ -42,6 +47,11 @@ class Config:
             print("Looks like all is configured. Let's start!")
 
     def check_files_to_load(self, data_folder):
+        """
+        check if files exists
+        :param data_folder: data folder where file should be located
+        :return: bool
+        """
         files_exist = {
             name: os.path.isfile(file)
             for name, file in self.filepaths[data_folder].items()
@@ -62,6 +72,14 @@ class Config:
                             f" {not_existing_files}")
 
     def check_folder_existing(self, data_folder):
+        """
+        check if data folder exists
+        TODO: if data folder for saving doesnt exist, mkdir
+
+        :param data_folder: location of data folder on disk (either relative
+        or absolute
+        :return: bool
+        """
         if os.path.exists(self.data_folder[data_folder]):
             return True
         else:
