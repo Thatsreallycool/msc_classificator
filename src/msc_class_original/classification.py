@@ -42,7 +42,9 @@ class Caretaker(ABC):
                              "msc_classificator/config.ini"
         )
         self.index_filepath = index_filepath
-        self.index = self.load_indexes(index_filepath=index_filepath)
+        self.index = self.load_indexes(
+            index_filepath=index_filepath
+        )
 
     @staticmethod
     def load_indexes(
@@ -97,6 +99,7 @@ class Caretaker(ABC):
     def retrieve_df(
             df_filepath: str
     ):
+        print(f"loading: {df_filepath}")
         return pandas.read_csv(df_filepath)
 
     @staticmethod

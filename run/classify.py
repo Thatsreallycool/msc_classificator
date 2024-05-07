@@ -7,7 +7,8 @@ user_config = Config(
                      "msc_classificator/config.ini"
 )
 
-index_file = f"{user_config.data_folder['save']}keyword_msc_idx.json"
+#index_file = f"{user_config.data_folder['save']}keyword_msc_idx.json"
+index_file = f"{user_config.data_folder['save']}ent_cls_idx.json"
 
 classify = Classification(
     index_filepath=index_file
