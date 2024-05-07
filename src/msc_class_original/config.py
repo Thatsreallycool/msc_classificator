@@ -1,8 +1,9 @@
 import os.path
+from zb_msc_classificator import read_ini
 
 
 class Config:
-    def __init__(self):
+    def __init__(self, config_file_path):
         """
         set file locations, classification settings, etc.
         """
@@ -11,22 +12,28 @@ class Config:
         #  into dict or object -> pydantic model for config?(!)
         self.nr_msc_cutoff = 10
 
+        try:
+            config_read = read_ini(config_file_path)
+            self.check_config_data = True
+        except FileNotFoundError:
+            raise Exception("config.ini not found!")
+
         self.data_folder = {
-            "load": "/home/marcel/data/projects/msc_fine_grained/data/",
-            "save": "/home/marcel/data/projects/msc_fine_grained/stored/"
+            "load": config_read["DATA FOLDER"]["load"],
+            "save": config_read["DATA FOLDER"]["save"]
         }
         filepaths = {
             "load": {
-                "stopwords": "stopwords.txt",
-                "training_data": "out.csv",
-                "test_data": "out-mr.csv",
-                "mrmscs": "mrmscs_dict.json"
+                "stopwords": config_read["FILEPATH-LOAD"]["stopwords"],
+                "training_data": config_read["FILEPATH-LOAD"]["training_data"],
+                "test_data": config_read["FILEPATH-LOAD"]["test_data"],
+                "mrmscs": config_read["FILEPATH-LOAD"]["mrmscs"],
 
             },
             "save": {
-                "pred_text": f"pred_text_{self.nr_msc_cutoff}.csv",
-                "pred_keyword": f"pred_keyword_{self.nr_msc_cutoff}.csv",
-                "pred_refs": f"pred_refs_{self.nr_msc_cutoff}.csv"
+                "pred_text": config_read["FILEPATH-SAVE"]["pred_text"],
+                "pred_keyword": config_read["FILEPATH-SAVE"]["pred_keyword"],
+                "pred_refs": config_read["FILEPATH-SAVE"]["pred_refs"],
             }
         }
         self.filepaths = {
@@ -41,7 +48,8 @@ class Config:
         if all(
             [
                 self.check_files_to_load(data_folder="load"),
-                self.check_folder_existing(data_folder="save")
+                self.check_folder_existing(data_folder="save"),
+                self.check_config_data
             ]
         ):
             print("Looks like all is configured. Let's start!")

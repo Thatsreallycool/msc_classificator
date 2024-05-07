@@ -18,6 +18,9 @@ import time
 import datetime
 import functools
 
+from configparser import ConfigParser
+import os.path
+
 
 def executing(value):
     def apply(func):
@@ -42,3 +45,27 @@ def my_timing(func):
         return my_func
     # Return function defined in this scope.
     return call_func
+
+
+def read_ini(file_path):
+    """
+    purpose: configuration data is read in
+
+    :param file_path: config file path, should in the same folder as main.py
+    meant for configuration of database server
+
+    :return: dictionary with all config data ("key" = "value")
+    (see config.ini.template)
+
+    """
+    if not os.path.exists(file_path):
+        raise Exception("config file not found!")
+    config = ConfigParser()
+    config.read(file_path)
+
+    my_config = {}
+    for section in config.sections():
+        my_config[section] = {}
+        for key in config[section]:
+            my_config[section][key] = config[section][key]
+    return my_config

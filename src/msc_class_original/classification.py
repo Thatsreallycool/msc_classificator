@@ -37,7 +37,10 @@ class Caretaker(ABC):
         indexes) can be run, compared and analysed independently.
         """
         super().__init__()
-        self.config = Config()
+        self.config = Config(
+            config_file_path="/home/marcel/data/PycharmProjects/"
+                             "msc_classificator/config.ini"
+        )
         self.index_filepath = index_filepath
         self.index = self.load_indexes(index_filepath=index_filepath)
 
@@ -245,8 +248,8 @@ class Classification(Caretaker):
             if de in mscs_predicted.keys() and de in mscs_actual.keys()
         }
 
-    @staticmethod
     def get_mscs(
+            self,
             table,
             idx
     ):
@@ -408,7 +411,7 @@ class Evaluate(Caretaker):
             for mscs_origin in precision_recall.keys():
                 mscs_predicted_full = mscs_dict[mscs_origin]
 
-                for i in range(self.config.nr_msc_cutoff + 1):
+                for i in range(2, self.config.nr_msc_cutoff + 1):
                     mscs_predicted = mscs_predicted_full[:i]
                     mscs_intersection = [
                         msc
@@ -479,7 +482,10 @@ class Evaluate(Caretaker):
         plt.title('Precision-Recall (ROC) Curve')
         plt.xlabel('Recall')
         plt.ylabel('Precision')
-        plt.legend()
+        plt.xlim((0, 1))
+        plt.ylim((0, 1))
+        plt.xticks(np.arange(0, 1.01, 0.1))
+        plt.legend(bbox_to_anchor=(1.05, 1.0), loc='upper left')
         plt.savefig(
             f'{self.config.data_folder["save"]}prec-rec-curve.pdf',
             format="pdf",
