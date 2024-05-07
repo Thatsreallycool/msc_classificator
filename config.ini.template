@@ -10,6 +10,5 @@ mrmscs = <json file for mrmscs>
 
 [FILEPATH-SAVE]
 pred_text = <filename in data folder for text-based prediction in test data>
-pred_keyword = <filename in data folder for keyword-based prediction in test
-data>
+pred_keyword = <filename in data folder for kw-based prediction in test data>
 pred_refs = <filename in data folder for ref-based prediction in test data>
