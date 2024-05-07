@@ -57,7 +57,7 @@ class Caretaker(ABC):
                 print("done.")
                 return json.load(f)
         else:
-            raise Exception("no file found")
+            raise Exception(f"no file found. looking for {index_filepath}")
 
     @staticmethod
     def store_df(
@@ -102,6 +102,29 @@ class Caretaker(ABC):
     ):
         with open(json_filepath, 'r') as f:
             return json.load(f)
+
+    @staticmethod
+    def clean_list(
+            string: str,
+            sep: str
+    ):
+        """
+        cleaning of certain strings from special characters
+        :param string: string with characters [,],\\,'
+        :param sep: define separator for turning string into list
+        :return: cleaned string
+        """
+        if not isinstance(string, str):
+            return ""
+        return string.replace(
+            '[', ''
+        ).replace(
+            ']', ''
+        ).replace(
+            '\\', ''
+        ).replace(
+            "'", ''
+        ).split(sep=sep)
 
 
 class Classification(Caretaker):
@@ -222,8 +245,8 @@ class Classification(Caretaker):
             if de in mscs_predicted.keys() and de in mscs_actual.keys()
         }
 
+    @staticmethod
     def get_mscs(
-            self,
             table,
             idx
     ):
@@ -234,31 +257,13 @@ class Classification(Caretaker):
         :return:
         """
         mscs = []
-        for msc in self.clean(table['msc'][idx]).split():
+        for msc in self.clean_list(
+            string=table['msc'][idx],
+            sep=" "
+        ):
             msc = msc.strip(',')
             mscs.append(msc)
         return mscs
-
-    @staticmethod
-    def clean(
-            string: str
-    ):
-        """
-        cleaning of certain strings from special characters
-        :param string: string with characters [,],\\,'
-        :return: cleaned string
-        """
-        if not isinstance(string, str):
-            return ""
-        return string.replace(
-            '[', ''
-        ).replace(
-            ']', ''
-        ).replace(
-            '\\',''
-        ).replace(
-            "'",''
-        )
 
     @staticmethod
     def load_test_data(
@@ -330,8 +335,9 @@ class Evaluate(Caretaker):
         ]
         return np.mean(lengths)
 
-    def get_precision_recall_curves(self):
-        # load prediction tables
+    def get_precision_recall(self):
+        # load from file
+        ## load prediction tables
         prediction_table_text = self.retrieve_df(
             df_filepath=self.config.filepaths["save"]["pred_text"]
         )
@@ -347,156 +353,104 @@ class Evaluate(Caretaker):
             json_filepath=self.config.filepaths["load"]["mrmscs"]
         )
 
-        # evaluate predictions
-        # ir measures
-        # baseline = mscs (mr)
-        # competing origins = predicted vs. zbmath
-        precision_recall = {
-            'mscs_human_baseline': {},
-            'mscs_predicted_text': {},
-            'mscs_predicted_keywords': {},
-            'mscs_predicted_references': {}
-        }
-
-        # len(prediction_table_text) < len(prediction_table_keywords) :
-        # text not always available
-
+        # preprocess input data
+        ## filter test data for de numbers that contain keywords AND texts
         de_numbers_containing_keywords_and_texts = [
             item
             for item in list(prediction_table_keywords['de'])
             if item in list(prediction_table_text['de'])
         ]
 
+        ## prep results dict
+        precision_recall = {
+            'mscs_human_baseline': {},
+            'mscs_predicted_text': {},
+            'mscs_predicted_keywords': {},
+            #'mscs_predicted_references': {}
+        }
+
         latest_progress = 0
         for runx, de in enumerate(de_numbers_containing_keywords_and_texts):
             # print(idx / len(prediction_table_text))
             current_progress = round(
-                (runx+1) / len(prediction_table_text)* 100, 1
+                (runx + 1) / len(prediction_table_text) * 100, 1
             )
             if current_progress != latest_progress \
                     and current_progress % 10 == 0:
                 print(current_progress, '%')
                 latest_progress = current_progress
 
-            # collect mscs
-            mscs_dict = {}
-
             idx = prediction_table_text.index[
                 prediction_table_text['de'] == de
             ].tolist()[0]
 
-            # mscs (mr)
+            # collect mscs
+            mscs_dict = {}
             mscs_dict['mscs_mr'] = mrmscs_dict[str(de)]
-
-            # mscs (zbmath) = competitor
-            mscs_zbmath = prediction_table_text['actual'][idx]
-            mscs_dict['mscs_human_baseline'] = mscs_zbmath.replace(
-                "'",
-                ""
-            ).lstrip('[').rstrip(']').strip().split(', ')
-
-            # mscs (predicted_text) = competitor
-            mscs_predicted_text = prediction_table_text[
-                'predicted'
-            ][idx].tolist()[0]
-            mscs_dict['mscs_predicted_text'] = mscs_predicted_text.replace(
-                "'",
-                ""
-            ).lstrip('[').rstrip(']').strip().split(', ')
-
-            # mscs (predicted_keywords) = competitor
-            idxx = prediction_table_keywords.index[
+            mscs_dict['mscs_human_baseline'] = self.clean_list(
+                string=prediction_table_text['actual'][idx],
+                sep=", "
+            )
+            mscs_dict['mscs_predicted_text'] = self.clean_list(
+                string=prediction_table_text['predicted'][idx],
+                sep=", "
+            )
+            idxk = prediction_table_keywords.index[
                 prediction_table_keywords['de'] == de
-                ]
-            idxx = idxx.tolist()[0]
-            # idxx != idx because prediction tables are not in same order
-            mscs_predicted_keywords = \
-            prediction_table_keywords['mscs_predicted'][idxx]
-            mscs_dict[
-                'mscs_predicted_keywords'
-            ] = mscs_predicted_keywords.replace(
-                "'", ""
-            ).lstrip('[').rstrip(']').strip().split(', ')
+            ].tolist()[0]
+            mscs_dict['mscs_predicted_keywords'] = self.clean_list(
+                string=prediction_table_keywords["predicted"][idxk],
+                sep=", "
+            )
 
-            # mscs (predicted_references) = competitor
-            idxx = prediction_table_references.index[
-                prediction_table_references['de'] == de
-            ]
-            try:
-                idxx = idxx.tolist()[0]
-                # idxx != idx because prediction tables are not in same order
-                mscs_predicted_references = \
-                prediction_table_references['mscs_predicted'][idxx]
+            # calc precision, recall
+            mscs_actual = mscs_dict['mscs_mr']
+            for mscs_origin in precision_recall.keys():
+                mscs_predicted_full = mscs_dict[mscs_origin]
 
-                mscs_dict[
-                    'mscs_predicted_references'
-                ] = mscs_predicted_references.replace(
-                    "'",
-                    ""
-                ).lstrip('[').rstrip(']').strip().split(', ')
+                for i in range(self.config.nr_msc_cutoff + 1):
+                    mscs_predicted = mscs_predicted_full[:i]
+                    mscs_intersection = [
+                        msc
+                        for msc in mscs_predicted
+                        if msc in mscs_actual
+                    ]
 
-                # mscs (actual) = baseline
-                mscs_actual = mscs_dict['mscs_mr']
+                    if len(mscs_predicted) > 0:
+                        precision = len(mscs_intersection) / len(mscs_predicted)
+                    else:
+                        precision = 1
 
-                for mscs_origin in precision_recall.keys():
+                    if len(mscs_actual) > 0:
+                        recall = len(mscs_intersection) / len(mscs_actual)
+                    else:
+                        recall = 1
 
-                    mscs_predicted_full = mscs_dict[mscs_origin]
-
-                    for i in range(self.config.nr_msc_cutoff + 1):
-                        mscs_predicted = mscs_predicted_full[:i]
-                        # https://stats.stackexchange.com/questions/21551/
-                        # how-to-compute-precision-recall-for-multiclass-
-                        # multilabel-classification
-                        # precision = ratio of how much of the predicted is
-                        # correct
-                        mscs_intersection = [
-                            msc
-                            for msc in mscs_predicted
-                            if msc in mscs_actual
-                        ]
-                        if len(mscs_predicted) > 0:
-                            precision = len(mscs_intersection) / len(
-                                mscs_predicted
-                            )
-                        else:
-                            precision = 1
-                        # recall = ratio of how many of the actual labels were
-                        # predicted
-                        if len(mscs_actual) > 0:
-                            recall = len(mscs_intersection) / len(mscs_actual)
-                        else:
-                            recall = 1
-
+                    try:
+                        precision_recall[
+                            mscs_origin
+                        ][i]['precisions'].append(precision)
+                        precision_recall[
+                            mscs_origin
+                        ][i]['recalls'].append(recall)
+                    except:
                         try:
-                            precision_recall[mscs_origin][i][
-                                'precisions'
-                            ].append(precision)
                             precision_recall[
                                 mscs_origin
-                            ][i]['recalls'].append(recall)
+                            ][i]['precisions'] = [precision]
+                            precision_recall[
+                                mscs_origin
+                            ][i]['recalls'] = [recall]
                         except:
-                            try:
-                                precision_recall[
-                                    mscs_origin
-                                ][i]['precisions'] = [precision]
-                                precision_recall[
-                                    mscs_origin
-                                ][i]['recalls'] = [recall]
-                            except:
-                                precision_recall[mscs_origin][i] = {
-                                    'precisions': [precision]
-                                }
-                                precision_recall[mscs_origin][i] = {
-                                    'recalls': [recall]
-                                }
+                            precision_recall[
+                                mscs_origin
+                            ][i] = {'precisions': [precision]}
+                            precision_recall[
+                                mscs_origin
+                            ][i] = {'recalls': [recall]}
 
-            except:
-                pass
-
-        # plot metrics
-        # precision-recall curve
+        # plot data
         fig, ax = plt.subplots()
-        # collect metrics for plot
         for mscs_origin in precision_recall.keys():
 
             pr_rc = precision_recall[mscs_origin]
@@ -511,7 +465,7 @@ class Evaluate(Caretaker):
             marker_dict = dict(
                 zip(
                     precision_recall.keys(),
-                    ['x', 's','o', '>']
+                    ['x', 's', 'o', '>']
                 )
             )
             ax.scatter(
@@ -526,6 +480,10 @@ class Evaluate(Caretaker):
         plt.xlabel('Recall')
         plt.ylabel('Precision')
         plt.legend()
-        plt.savefig('data/prec-rec-curve.pdf', format="pdf",
-                    bbox_inches="tight")
+        plt.savefig(
+            f'{self.config.data_folder["save"]}prec-rec-curve.pdf',
+            format="pdf",
+            bbox_inches="tight"
+        )
         plt.show()
+

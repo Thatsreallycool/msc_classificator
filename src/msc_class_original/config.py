@@ -12,8 +12,8 @@ class Config:
         self.nr_msc_cutoff = 10
 
         self.data_folder = {
-            "load": "../data/",
-            "save": "../stored/"
+            "load": "/home/marcel/data/projects/msc_fine_grained/data/",
+            "save": "/home/marcel/data/projects/msc_fine_grained/stored/"
         }
         filepaths = {
             "load": {

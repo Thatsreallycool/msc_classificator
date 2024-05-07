@@ -1,6 +1,10 @@
 from msc_class_original.classification import Classification
 
-index_file = "../stored/keyword_msc_idx.json"
+from msc_class_original.config import Config
+
+user_config = Config()
+
+index_file = f"{user_config.data_folder['save']}keyword_msc_idx.json"
 
 classify = Classification(
     index_filepath=index_file
