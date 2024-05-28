@@ -27,6 +27,7 @@ class GenerateIndex:
                  index_category: str,
                  km: bool = True,
                  mk: bool = False,
+                 store_it: bool = True,
                  overwrite: bool = False
                  ):
         """
@@ -37,7 +38,8 @@ class GenerateIndex:
         :param overwrite: boolean. enable if index results already exists and
         you want to overwrite
         """
-        user_config = Config()
+        user_config = Config(config_file_path="/home/marcel/PycharmProjects/"
+                     "msc_classificator/config.ini")
 
         training_data = self.load_training_data(
             filepath=user_config.filepaths["load"]["training_data"],
@@ -56,17 +58,18 @@ class GenerateIndex:
                 "todo": mk
             }
         }
-
-        self.store_index(
-            filepaths=store_index_filepaths,
-            index=self.generate_idx(
-                df=training_data,
-                idx_name=index_category,
-                km=km,
-                mk=mk
-            ),
-            overwrite=overwrite
-        )
+        self.index_generated = self.generate_idx(
+            df=training_data,
+            idx_name=index_category,
+            km=km,
+            mk=mk
+        )["km"]
+        if store_it:
+            self.store_index(
+                filepaths=store_index_filepaths,
+                index=self.index_generated,
+                overwrite=overwrite
+            )
 
     def nested_dict(
             self,
@@ -203,3 +206,10 @@ class GenerateIndex:
                     return os.path.isfile(instructions["file"])
             else:
                 continue
+
+    def index_cutoff_keywords(self, max_keywords: int):
+        return {
+            keywords: values
+            for keywords, values in self.index_generated.items()
+            if len(keywords.split()) <= max_keywords
+        }

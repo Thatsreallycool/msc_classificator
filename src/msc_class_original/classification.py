@@ -27,7 +27,9 @@ from abc import ABC, abstractmethod
 class Caretaker(ABC):
     def __init__(
             self,
-            index_filepath: str
+            user_config,
+            index_filepath: str = None,
+            index: dict = {}
     ):
         """
         purpose: universal class for reusing methods, cannot be initiated
@@ -37,12 +39,16 @@ class Caretaker(ABC):
         indexes) can be run, compared and analysed independently.
         """
         super().__init__()
-        self.config = Config(
-            config_file_path="/home/marcel/data/PycharmProjects/"
-                             "msc_classificator/config.ini"
-        )
-        self.index_filepath = index_filepath
-        self.index = self.load_indexes(index_filepath=index_filepath)
+        self.config = user_config
+        if index_filepath:
+            self.index_filepath = index_filepath
+            self.index = self.load_indexes(index_filepath=index_filepath)
+        elif index.keys():
+            self.index_filepath = None
+            self.index = index
+        else:
+            raise Exception("either provide index file path or index with "
+                            "keys!")
 
     @staticmethod
     def load_indexes(
@@ -133,7 +139,8 @@ class Caretaker(ABC):
 class Classification(Caretaker):
     def execute(
             self,
-            pred_basis: str
+            pred_basis: str,
+            store_to_file: bool = True
     ):
         """
         after initiating this class (init from Caretaker) the index is
@@ -146,15 +153,19 @@ class Classification(Caretaker):
             delimiter=','
         )
 
-        return self.store_df(
-            data_filepath=self.config.filepaths["save"][f"pred_{pred_basis}"],
-            data=self.predict_entity_msc(
-                test_data=test_data,
-                index=self.index,
-                prediction_basis=pred_basis
-            ),
-            header=['de', 'predicted', 'actual']
+        data = self.predict_entity_msc(
+            test_data=test_data,
+            index=self.index,
+            prediction_basis=pred_basis
         )
+        if store_to_file:
+            return self.store_df(
+                data_filepath=self.config.filepaths["save"][f"pred_{pred_basis}"],
+                data=data,
+                header=['de', 'mscs_predicted', 'mscs_actual']
+           )
+        else:
+            return data
 
     def predict_entity_msc(
             self,
@@ -169,7 +180,7 @@ class Classification(Caretaker):
         :param index: mapping from text -> MSCs (loaded by init)
         :param prediction_basis: string describing either 'refs', 'keyword'
         or 'text'
-        :return: map from de number (from test data set) -> MSCs_predicted
+        :return: dict map from de number (from test data set) -> MSCs_predicted
         and MSCs_actual according to test data set
         """
         # mscs actual vs. predicted
@@ -184,7 +195,7 @@ class Classification(Caretaker):
 
         tot_rows = len(test_data)
         latest_progress = 0
-        print("starting prediction...")
+        print(f"starting prediction based on... {prediction_basis}")
         for idx in range(tot_rows):
             # print(idx)
             current_progress = round(idx / tot_rows * 100, 1)
@@ -194,55 +205,132 @@ class Classification(Caretaker):
                 latest_progress = current_progress
 
             de = test_data['de'][idx]
-            text = test_data[prediction_basis][idx]
             mscs_actual[de] = self.get_mscs(test_data, idx)
             mscs_predicted_stat = {}
-            n_gram_lengths = [2, 3]
-            for n in n_gram_lengths:
-                try:
-                    nngrams = ngrams(text.split(), n)
-                    for nngram in nngrams:
-                        entity = ''
-                        for word in nngram:
-                            entity += word + ' '
-                        entity = entity[:-1]
-                        try:
-                            if index[entity] is not None and \
-                                    entity not in sstopwords:
-                                # print(entity)
-                                # mscs_predicted[idx].extend(
-                                # list(sorted_keyword_msc_idx[entity])[0:1])
-                                for cls in index[entity].keys():
-                                    try:
-                                        # SELECTION HERE
-                                        mscs_predicted_stat[cls] += 1
-                                        # cls[1]#1 # weightedcontribution or
-                                        # binarycontribution
-                                    except:
-                                        mscs_predicted_stat[cls] = 1
-                        except:
-                            pass
-                except:
-                    pass
-            if len(mscs_predicted_stat) != 0:
-                sorted_mscs_predicted_stat = dict(
-                    sorted(
-                        mscs_predicted_stat.items(),
-                        key=lambda item: item[1], reverse=True
+            if prediction_basis == "text":
+                text = test_data[prediction_basis][idx]
+                n_gram_lengths = [2, 3]
+                for n in n_gram_lengths:
+                    try:
+                        nngrams = ngrams(text.split(), n)
+                        for nngram in nngrams:
+                            entity = ''
+                            for word in nngram:
+                                entity += word + ' '
+                            entity = entity[:-1]
+                            try:
+                                if index[entity] is not None and \
+                                        entity not in sstopwords:
+                                    # print(entity)
+                                    # mscs_predicted[idx].extend(
+                                    # list(sorted_keyword_msc_idx[entity])[0:1])
+                                    for cls in index[entity].keys():
+                                        try:
+                                            # SELECTION HERE
+                                            mscs_predicted_stat[cls] += 1
+                                            # cls[1]#1 # weightedcontribution or
+                                            # binarycontribution
+                                        except:
+                                            mscs_predicted_stat[cls] = 1
+                            except:
+                                pass
+                    except:
+                        pass
+                if len(mscs_predicted_stat) != 0:
+                    sorted_mscs_predicted_stat = dict(
+                        sorted(
+                            mscs_predicted_stat.items(),
+                            key=lambda item: item[1], reverse=True
+                        )
                     )
+
+                    # get (normalized) prediction (confidence)
+                    mscs_predicted[de] = list(
+                        sorted_mscs_predicted_stat
+                    )[:self.config.nr_msc_cutoff]
+                    # cut off at fixed nr_mscs_cutoff or dynamic number
+                    # #len(mscs_actual[idx])
+            elif prediction_basis == "keyword":
+                keywords = self.clean_list(
+                    string=test_data[prediction_basis][idx],
+                    sep=", "
                 )
 
-                # get (normalized) prediction (confidence)
-                mscs_predicted[de] = list(sorted_mscs_predicted_stat)[
-                                     :self.config.nr_msc_cutoff
-                                     ]
-                # cut off at fixed nr_mscs_cutoff or dynamic number
-                # #len(mscs_actual[idx])
+                for keyword in keywords:
+                    try:
+                        for cls in index[keyword].items():
+                            try:
+                                # SELECTION HERE
+                                mscs_predicted_stat[cls[0]] += 1
+                                # cls[1]#1 # weightedcontribution or binarycontribution
+                            except:
+                                mscs_predicted_stat[cls[0]] = 1
+                    except:
+                        pass
+
+                if len(mscs_predicted_stat) != 0:
+                    # sort
+                    sorted_mscs_predicted_stat = dict(
+                        sorted(
+                            mscs_predicted_stat.items(),
+                            key=lambda item: item[1],
+                            reverse=True
+                        )
+                    )
+
+                    # get (normalized) prediction (confidence)
+                    mscs_predicted[de] = list(
+                        sorted_mscs_predicted_stat
+                    )[:self.config.nr_msc_cutoff]  # cut off at fixed
+                    # nr_mscs_cutoff or dynamic number #len(mscs_actual[idx])
+                    mscs_cut_off = list(
+                        sorted_mscs_predicted_stat.items()
+                    )[:self.config.nr_msc_cutoff]
+                    # norm
+                    tot = sum(v for k, v in mscs_cut_off)
+                    # confidence
+                    mscs_pred_conf[idx] = [v / tot for k, v in mscs_cut_off]
+            elif prediction_basis == "refs":
+                references = self.clean_list(
+                    string=test_data[prediction_basis][idx],
+                    sep=","
+                )
+
+                for reference in references:
+                    try:
+                        for cls in index[reference].items():
+                            try:
+                                # SELECTION HERE
+                                mscs_predicted_stat[cls[0]] += 1
+                                # cls[1]#1 # weightedcontribution or binarycontribution
+                            except:
+                                mscs_predicted_stat[cls[0]] = 1
+                    except:
+                        pass
+
+                if len(mscs_predicted_stat) != 0:
+                    # sort
+                    sorted_mscs_predicted_stat = dict(
+                        sorted(
+                            mscs_predicted_stat.items(),
+                            key=lambda item: item[1],
+                            reverse=True
+                        )
+                    )
+
+                    # get (normalized) prediction (confidence)
+                    mscs_predicted[de] = list(
+                        sorted_mscs_predicted_stat
+                    )[:self.config.nr_msc_cutoff]  # cut off at fixed nr_mscs_cutoff or dynamic number #len(mscs_actual[idx])
+                    mscs_cut_off = list(
+                        sorted_mscs_predicted_stat.items()
+                    )[:self.config.nr_msc_cutoff]
+
         print("prediction finished!")
         return {
             de: {
-                "predicted": mscs_predicted[de],
-                "actual": mscs_actual[de]
+                "mscs_predicted": mscs_predicted[de],
+                "mscs_actual": mscs_actual[de]
             }
             for de, predicted in mscs_predicted.items()
             if de in mscs_predicted.keys() and de in mscs_actual.keys()
@@ -362,6 +450,7 @@ class Evaluate(Caretaker):
             item
             for item in list(prediction_table_keywords['de'])
             if item in list(prediction_table_text['de'])
+            if item in list(prediction_table_references['de'])
         ]
 
         ## prep results dict
@@ -369,14 +458,15 @@ class Evaluate(Caretaker):
             'mscs_human_baseline': {},
             'mscs_predicted_text': {},
             'mscs_predicted_keywords': {},
-            #'mscs_predicted_references': {}
+            'mscs_predicted_references': {}
         }
 
         latest_progress = 0
         for runx, de in enumerate(de_numbers_containing_keywords_and_texts):
             # print(idx / len(prediction_table_text))
             current_progress = round(
-                (runx + 1) / len(prediction_table_text) * 100, 1
+                (runx + 1) / len(de_numbers_containing_keywords_and_texts)*100,
+                1
             )
             if current_progress != latest_progress \
                     and current_progress % 10 == 0:
@@ -391,19 +481,26 @@ class Evaluate(Caretaker):
             mscs_dict = {}
             mscs_dict['mscs_mr'] = mrmscs_dict[str(de)]
             mscs_dict['mscs_human_baseline'] = self.clean_list(
-                string=prediction_table_text['actual'][idx],
+                string=prediction_table_text['mscs_actual'][idx],
                 sep=", "
             )
             mscs_dict['mscs_predicted_text'] = self.clean_list(
-                string=prediction_table_text['predicted'][idx],
+                string=prediction_table_text['mscs_predicted'][idx],
                 sep=", "
             )
             idxk = prediction_table_keywords.index[
                 prediction_table_keywords['de'] == de
             ].tolist()[0]
             mscs_dict['mscs_predicted_keywords'] = self.clean_list(
-                string=prediction_table_keywords["predicted"][idxk],
+                string=prediction_table_keywords["mscs_predicted"][idxk],
                 sep=", "
+            )
+            idxr = prediction_table_references.index[
+                prediction_table_references['de'] == de
+            ].tolist()[0]
+            mscs_dict['mscs_predicted_references'] = self.clean_list(
+                string=prediction_table_references["mscs_predicted"][idxr],
+                sep=","
             )
 
             # calc precision, recall
@@ -485,6 +582,7 @@ class Evaluate(Caretaker):
         plt.xlim((0, 1))
         plt.ylim((0, 1))
         plt.xticks(np.arange(0, 1.01, 0.1))
+        plt.yticks(np.arange(0, 1.01, 0.1))
         plt.legend(bbox_to_anchor=(1.05, 1.0), loc='upper left')
         plt.savefig(
             f'{self.config.data_folder["save"]}prec-rec-curve.pdf',
@@ -493,3 +591,254 @@ class Evaluate(Caretaker):
         )
         plt.show()
 
+    def get_precision_recall2(self, kw: dict = None):
+        # load from file
+        ## load prediction tables
+        prediction_table_text = self.retrieve_df(
+            df_filepath=self.config.filepaths["save"]["pred_text"]
+        )
+        prediction_dict_text = {
+            prediction_table_text['de'][x]: {
+                'predicted': prediction_table_text['mscs_predicted'][x],
+                'actual': prediction_table_text['mscs_actual'][x]
+            }
+            for x in range(len(prediction_table_text))
+        }
+        if kw is None:
+            prediction_table_keywords = self.retrieve_df(
+                df_filepath=self.config.filepaths["save"]["pred_keyword"]
+            )
+            prediction_dict_keywords = {
+                prediction_table_keywords['de'][x]: {
+                    'predicted': prediction_table_keywords['mscs_predicted'][x],
+                    'actual': prediction_table_keywords['mscs_actual'][x]
+                }
+                for x in range(len(prediction_table_keywords))
+            }
+        else:
+            prediction_dict_keywords = {
+                k: {
+                    "predicted": v["mscs_predicted"],
+                    "actual": v["mscs_actual"]
+                }
+                for k, v in kw.items()
+            }
+        prediction_table_references = self.retrieve_df(
+            df_filepath=self.config.filepaths["save"]["pred_refs"]
+        )
+        prediction_dict_references = {
+            prediction_table_references['de'][x]: {
+                'predicted': prediction_table_references['mscs_predicted'][x],
+                'actual': prediction_table_references['mscs_actual'][x]
+            }
+            for x in range(len(prediction_table_references))
+        }
+
+        # load mrmscs baseline
+        mrmscs_dict = self.retrieve_json(
+            json_filepath=self.config.filepaths["load"]["mrmscs"]
+        )
+
+        ## prep results dict
+        precision_recall = {
+            'mscs_human_baseline': {},
+            'mscs_predicted_text': {},
+            'mscs_predicted_keywords': {},
+            'mscs_predicted_references': {}
+        }
+
+        latest_progress = 0
+        tot_rows = len(prediction_dict_text.keys()) + \
+                   len(prediction_dict_references.keys()) + \
+                   len(prediction_dict_keywords.keys())
+        print(f"starting... total: {tot_rows}")
+
+        for runx, de in enumerate(prediction_table_text['de']):
+            current_progress = round(
+                (runx + 1) / tot_rows * 100, 1
+            )
+            if current_progress != latest_progress \
+                    and current_progress % 10 == 0:
+                print(current_progress, '%')
+                latest_progress = current_progress
+
+            # collect mscs
+            mscs_dict = {}
+            mscs_dict['mscs_human_baseline'] = self.clean_list(
+                string=prediction_dict_text[de]['actual'],
+                sep=", "
+            )
+            mscs_dict['mscs_predicted_text'] = self.clean_list(
+                string=prediction_dict_text[de]['predicted'],
+                sep=", "
+            )
+
+            # calc precision, recall
+            precision_recall = self.get_prec(
+                mscs_dict=mscs_dict,
+                precision_recall=precision_recall,
+                mscs_origin="mscs_predicted_text",
+                mscs_actual=mrmscs_dict[str(de)]
+            )
+            precision_recall = self.get_prec(
+                mscs_dict=mscs_dict,
+                precision_recall=precision_recall,
+                mscs_origin="mscs_human_baseline",
+                mscs_actual=mrmscs_dict[str(de)]
+            )
+
+        for runy, de in enumerate(prediction_dict_keywords.keys()):
+            current_progress = round(
+                (len(prediction_table_text) + runy + 1) / tot_rows * 100, 1
+            )
+            if current_progress != latest_progress \
+                    and current_progress % 10 == 0:
+                print(current_progress, '%')
+                latest_progress = current_progress
+
+            # collect mscs
+            mscs_dict = {}
+            mscs_dict[
+                'mscs_predicted_keywords'
+            ] = prediction_dict_keywords[de]['predicted']
+
+            # calc precision, recall
+            precision_recall = self.get_prec(
+                mscs_dict=mscs_dict,
+                precision_recall=precision_recall,
+                mscs_origin="mscs_predicted_keywords",
+                mscs_actual=mrmscs_dict[str(de)]
+            )
+
+        for runz, de in enumerate(prediction_table_references['de']):
+            current_progress = round(
+                (len(prediction_table_text) + len(
+                    prediction_dict_keywords.keys()) +
+                 runz + 1) / tot_rows * 100, 1
+            )
+            if current_progress != latest_progress \
+                    and current_progress % 10 == 0:
+                print(current_progress, '%')
+                latest_progress = current_progress
+
+            # collect mscs
+            mscs_dict = {}
+            mscs_dict['mscs_predicted_references'] = self.clean_list(
+                string=prediction_dict_references[de]['predicted'],
+                sep=", "
+            )
+
+            # calc precision, recall
+            precision_recall = self.get_prec(
+                mscs_dict=mscs_dict,
+                precision_recall=precision_recall,
+                mscs_origin="mscs_predicted_references",
+                mscs_actual=mrmscs_dict[str(de)]
+            )
+
+        # plot data
+        fig, ax = plt.subplots()
+        pr = None
+        for mscs_origin in precision_recall.keys():
+
+            pr_rc = precision_recall[mscs_origin]
+            precisions = []
+            recalls = []
+            cutoffs = []
+            for p_r in pr_rc.items():
+                cutoffs.append(p_r[0])
+                precisions.append(np.mean(p_r[1]['precisions']))
+                recalls.append(np.mean(p_r[1]['recalls']))
+            if mscs_origin == "mscs_predicted_keywords":
+                pr = {
+                    "precisions": precisions,
+                    "recalls": recalls
+                }
+            else:
+                pass
+            marker_dict = dict(
+                zip(
+                    precision_recall.keys(),
+                    ['x', 's', 'o', '>']
+                )
+            )
+            ax.scatter(
+                recalls,
+                precisions,
+                marker=marker_dict[mscs_origin],
+                s=10,
+                label=mscs_origin
+            )
+
+        plt.title('Precision-Recall (ROC) Curve')
+        plt.xlabel('Recall')
+        plt.ylabel('Precision')
+        plt.xlim((0, 1))
+        plt.ylim((0, 1))
+        plt.xticks(np.arange(0, 1.01, 0.1))
+        plt.yticks(np.arange(0, 1.01, 0.1))
+        plt.legend(bbox_to_anchor=(1.05, 1.0), loc='upper left')
+        plt.savefig(
+            f'{self.config.data_folder["save"]}prec-rec-curve_key.pdf',
+            format="pdf",
+            bbox_inches="tight"
+        )
+        plt.show()
+        print("test end")
+
+        return pr
+
+    def get_precision_recall_boot(self, prediction_dict_keywords):
+        pass
+
+    def get_prec(
+            self,
+            mscs_dict,
+            precision_recall,
+            mscs_origin,
+            mscs_actual
+    ):
+
+        mscs_predicted_full = mscs_dict[mscs_origin]
+
+        for i in range(2, self.config.nr_msc_cutoff + 1):
+            mscs_predicted = mscs_predicted_full[:i]
+            mscs_intersection = [
+                msc
+                for msc in mscs_predicted
+                if msc in mscs_actual
+            ]
+
+            if len(mscs_predicted) > 0:
+                precision = len(mscs_intersection) / len(mscs_predicted)
+            else:
+                precision = 1
+
+            if len(mscs_actual) > 0:
+                recall = len(mscs_intersection) / len(mscs_actual)
+            else:
+                recall = 1
+
+            try:
+                precision_recall[
+                    mscs_origin
+                ][i]['precisions'].append(precision)
+                precision_recall[
+                    mscs_origin
+                ][i]['recalls'].append(recall)
+            except:
+                try:
+                    precision_recall[
+                        mscs_origin
+                    ][i]['precisions'] = [precision]
+                    precision_recall[
+                        mscs_origin
+                    ][i]['recalls'] = [recall]
+                except:
+                    precision_recall[
+                        mscs_origin
+                    ][i] = {'precisions': [precision]}
+                    precision_recall[
+                        mscs_origin
+                    ][i] = {'recalls': [recall]}
+        return precision_recall

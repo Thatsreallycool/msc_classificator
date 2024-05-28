@@ -1,14 +1,15 @@
 from msc_class_original.generate_index import GenerateIndex
 
-create_indexes = ['keyword', 'text', 'refs']
+create_indexes = 'keyword'
+keyword_length = 50
 
-
-gen = [
-    GenerateIndex(
-        index_category=item,
+gen = GenerateIndex(
+        index_category=create_indexes,
         km=True,
-        mk=True,
+        mk=False,
+        store_it=False,
         overwrite=True
     )
-    for item in create_indexes
-]
+cut_index = gen.index_cutoff_keywords(max_keywords=keyword_length)
+
+
