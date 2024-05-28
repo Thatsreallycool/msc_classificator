@@ -46,7 +46,7 @@ class GenerateIndex:
             columns=['msc', 'keyword', 'refs', 'text', 'title'],
             delimiter=','
         )
-
+        self.t_data = training_data
         store_folder = user_config.data_folder["save"]
         store_index_filepaths = {
             "km": {
@@ -58,12 +58,13 @@ class GenerateIndex:
                 "todo": mk
             }
         }
-        self.index_generated = self.generate_idx(
-            df=training_data,
-            idx_name=index_category,
-            km=km,
-            mk=mk
-        )["km"]
+        if km or mk:
+            self.index_generated = self.generate_idx(
+                df=training_data,
+                idx_name=index_category,
+                km=km,
+                mk=mk
+            )["km"]
         if store_it:
             self.store_index(
                 filepaths=store_index_filepaths,

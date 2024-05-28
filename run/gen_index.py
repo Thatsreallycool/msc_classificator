@@ -10,6 +10,5 @@ gen = GenerateIndex(
         store_it=False,
         overwrite=True
     )
-cut_index = gen.index_cutoff_keywords(max_keywords=keyword_length)
 
 
