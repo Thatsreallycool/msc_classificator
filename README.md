@@ -60,16 +60,44 @@ for dev purposes (from main folder)
 - output: json in data_folder set in config
 
 # TODO
-- run original
-  - reproduce predictions from new index 
-  - generate index and find differences between zenodo version and mine
+- check how text2msc works (2-3 n gram?)
 - transfer original to modularized version
   - reproduce results from original code
   - modules:
     - generate
+      - load from file / from esi
+      - clean data with harmonizer
+      - generate map(keywords, text, mscs, combination, ... -> mscs)
+        - output: dict or sparse matrix
     - evaluate
+      - load
+        - actual
+        - human base line
+        - prediction basis map results
+          - keyword
+          - text
+          - msc
+          - all combined
+          - ...
+      - metrics
+        - precision recall
+        - order of prediction correct?
+      - store results
     - predict
+      - get map(s) from
+        - file
+        - esi binary
+      - get data to map from
+        - file
+        - ...
+      - execute mapping
+      - store data to
+        - file
+        - ...?
     - harmonize
+      - remove special characters
+      - canonicalize
+      - turn strings into lists(?)
     - get data (Caretaker stuff)
     - config (pydantic?)
 - evaluate: precision vs. recall figure

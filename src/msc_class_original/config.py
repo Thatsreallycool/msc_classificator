@@ -16,6 +16,7 @@ class Config:
             config_read = read_ini(config_file_path)
             self.check_config_data = True
         except FileNotFoundError:
+            self.check_config_data = False
             raise Exception("config.ini not found!")
 
         self.data_folder = {
