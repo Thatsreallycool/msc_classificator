@@ -9,7 +9,7 @@ user_config = Config(
 
 create_index = 'keyword'
 keyword_length = 50
-kl = [50, 25, 10, 5, 4, 3, 2]
+kl = [7, 6, 5, 4, 3, 2]
 
 
 gen = GenerateIndex(
