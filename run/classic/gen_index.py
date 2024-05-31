@@ -8,7 +8,9 @@ gen = GenerateIndex(
         km=True,
         mk=False,
         store_it=False,
-        overwrite=True
+        overwrite=False
     )
+
+print(len(gen.index_generated.keys()))
 
 
