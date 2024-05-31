@@ -3,8 +3,7 @@ from msc_class_original.classification import Classification, Evaluate
 from msc_class_original.config import Config
 
 user_config = Config(
-    config_file_path="/home/marcel/PycharmProjects/"
-                     "msc_classificator/config.ini"
+    config_file_path="/config.ini"
 )
 
 create_index = 'keyword'
