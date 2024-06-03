@@ -4,6 +4,8 @@ from zb_msc_classificator.harmonize import Harmonizer
 import pandas
 import os
 
+from elasticsearch import Elasticsearch
+
 
 class GenerateMap:
     def __init__(self, config):
@@ -44,9 +46,15 @@ class GenerateMap:
             usecols=columns
         )
 
-    @staticmethod
-    def load_from_elastic():
-        return None
+    def load_from_elastic(self):
+        es = Elasticsearch(
+            hosts=[
+                f"{self.config.admin_config.elastic.es_host}"
+                f"{self.config.admin_config.elastic.es_port}"
+            ],
+            api_key=self.config.admin_config.elastic.es_api_key,
+            ca_certs=self.config.admin_config.elastic.ca_certs
+        )
 
     def execute(self):
         tools = Toolbox()

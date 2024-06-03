@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 from enum import Enum
 
 
@@ -26,9 +26,17 @@ class FilePathOutput(BaseModel):
     prediction_refs: str = None
 
 
+class Elastic(BaseModel):
+    es_host: str = None
+    es_port: str = None
+    es_api_key: str = None
+    ca_certs: str = None
+
+
 class AdminConfig(BaseModel):
     config_filename: str = "config.ini"
     zbmath_path: str = "/etc/zbmath-api/"
     data_folder: DataFolder = DataFolder()
     filepath_input: FilePathInput = FilePathInput()
     filepath_output: FilePathOutput = FilePathOutput()
+    elastic: Elastic = Elastic()

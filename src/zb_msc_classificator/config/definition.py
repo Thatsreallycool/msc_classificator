@@ -3,14 +3,14 @@ import os
 from zb_msc_classificator import read_ini
 from zb_msc_classificator.config.config_datamodel \
     import AdminConfig, DataFolder, FilePathInput, FilePathOutput, \
-    TrainingSource
+    TrainingSource, Elastic
 
 
 class ConfigGeneral(BaseModel):
     admin_config: AdminConfig = AdminConfig()
 
     @validator("admin_config", always=True)
-    def config_filepath_location(cls, cfg_data):
+    def confirm_consistency(cls, cfg_data):
         filepath_options = [
             f"{cfg_data.zbmath_path}{cfg_data.config_filename}",
             f"../../{cfg_data.config_filename}",
@@ -28,20 +28,44 @@ class ConfigGeneral(BaseModel):
             raise FileNotFoundError("config.ini not found!")
         admin_cfg = read_ini(file_path=config_filepath)
 
-        data_folder = DataFolder(**admin_cfg["DATA FOLDER"])
-        fp_input = {
-            k: f"{data_folder.load_from}{v}"
-            for k, v in admin_cfg["FILEPATH INPUT"].items()
-        }
-        fp_output = {
-            k: f"{data_folder.save_to}{v}"
-            for k, v in admin_cfg["FILEPATH OUTPUT"].items()
-        }
+        if any(admin_cfg):
+            data_folder = DataFolder(**admin_cfg["DATA FOLDER"])
+            if not all(
+                [
+                    os.path.isdir(data_folder.dict()[item])
+                    for item in data_folder.__fields__.keys()
+                ]
+            ):
+                raise FileNotFoundError("data folder not created!"
+                                        "")
+            fp_input = FilePathInput(
+                **{
+                    k: f"{data_folder.load_from}{v}"
+                    for k, v in admin_cfg["FILEPATH INPUT"].items()
+                }
+            )
+            if not all(
+                [
+                    os.path.isfile(fp_input.dict()[item])
+                    for item in fp_input.__fields__.keys()
+                ]
+            ):
+                raise FileNotFoundError("input files not found!")
+
+            fp_output = FilePathOutput(
+                **{
+                    k: f"{data_folder.save_to}{v}"
+                    for k, v in admin_cfg["FILEPATH OUTPUT"].items()
+                }
+            )
+        else:
+            raise FileNotFoundError("config.ini not correct!")
 
         return AdminConfig(
             data_folder=data_folder,
-            filepath_input=FilePathInput(**fp_input),
-            filepath_output=FilePathOutput(**fp_output)
+            filepath_input=fp_input,
+            filepath_output=fp_output,
+            elastic=Elastic(**admin_cfg["ELASTIC"])
         )
 
 
