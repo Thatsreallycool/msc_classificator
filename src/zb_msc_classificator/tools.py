@@ -39,3 +39,13 @@ class Toolbox:
     @staticmethod
     def str_spaces_to_list(string: str, delimiter: str):
         return string.split(delimiter)
+
+    @staticmethod
+    def list_of_dicts_to_list(list_of_dicts, key_of_dict):
+        """
+        [{key:val1},{key:val2},...] -> [val1,val2,...]
+        :param list_of_dicts: a list of dicts containing the same subkey
+        :param key_of_dict: the key of all dicts
+        :return: a list of the values
+        """
+        return [item[key_of_dict] for item in list_of_dicts]

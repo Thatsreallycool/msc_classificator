@@ -31,6 +31,7 @@ class Elastic(BaseModel):
     es_port: str = None
     es_api_key: str = None
     ca_certs: str = None
+    index_name: str = None
 
 
 class AdminConfig(BaseModel):
