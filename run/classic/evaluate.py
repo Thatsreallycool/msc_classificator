@@ -2,9 +2,7 @@ from msc_class_original.classification import Evaluate
 from msc_class_original.config import Config
 
 user_config = Config(
-    config_file_path="/home/marcel/PycharmProjects/"
-                     "msc_classificator/config"
-                     ".ini"
+    config_file_path="/config.ini"
 )
 #index_file = f"{user_config.data_folder['save']}keyword_msc_idx.json"
 index_file = f"{user_config.data_folder['save']}ent_cls_idx.json"

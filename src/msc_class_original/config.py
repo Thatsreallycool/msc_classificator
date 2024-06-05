@@ -20,21 +20,21 @@ class Config:
             raise Exception("config.ini not found!")
 
         self.data_folder = {
-            "load": config_read["DATA FOLDER"]["load"],
-            "save": config_read["DATA FOLDER"]["save"]
+            "load": config_read["DATA FOLDER"]["load_from"],
+            "save": config_read["DATA FOLDER"]["save_to"]
         }
         filepaths = {
             "load": {
-                "stopwords": config_read["FILEPATH-LOAD"]["stopwords"],
-                "training_data": config_read["FILEPATH-LOAD"]["training_data"],
-                "test_data": config_read["FILEPATH-LOAD"]["test_data"],
-                "mrmscs": config_read["FILEPATH-LOAD"]["mrmscs"],
+                "stopwords": config_read["FILEPATH INPUT"]["stopwords"],
+                "training_data": config_read["FILEPATH INPUT"]["training_data"],
+                "test_data": config_read["FILEPATH INPUT"]["test_data"],
+                "mrmscs": config_read["FILEPATH INPUT"]["mrmscs"],
 
             },
             "save": {
-                "pred_text": config_read["FILEPATH-SAVE"]["pred_text"],
-                "pred_keyword": config_read["FILEPATH-SAVE"]["pred_keyword"],
-                "pred_refs": config_read["FILEPATH-SAVE"]["pred_refs"],
+                "pred_text": config_read["FILEPATH OUTPUT"]["prediction_text"],
+                "pred_keyword": config_read["FILEPATH OUTPUT"]["prediction_keyword"],
+                "pred_refs": config_read["FILEPATH OUTPUT"]["prediction_refs"],
             }
         }
         self.filepaths = {
