@@ -1,6 +1,6 @@
 # msc_fine_grained
 This package contains a linear mapping between keywords and msc categories, 
-based on ... (placeholder text).
+based on ... (placeholder text)...
 
 Please note that all run example codes treat the source code as a normal 
 python package, so you need to install it first in your virtual environment, 
