@@ -2,6 +2,9 @@ from json import JSONEncoder, dump
 from typing import Any, Iterator
 from collections import defaultdict
 
+import base64
+import zlib
+import pickle
 
 class Serialize(JSONEncoder):
     def iterencode(self, o: Any, _one_shot: bool = ...) -> Iterator[str]:
@@ -49,3 +52,21 @@ class Toolbox:
         :return: a list of the values
         """
         return [item[key_of_dict] for item in list_of_dicts]
+
+    @staticmethod
+    def compress(data):
+        return base64.b64encode(
+            zlib.compress(
+                pickle.dumps(data, protocol=4)
+            )
+        ).decode()
+
+    @staticmethod
+    def uncompress(pickled_data):
+        return pickle.loads(
+            zlib.decompress(
+                base64.b64decode(
+                    pickled_data.encode()
+                )
+            )
+        )
