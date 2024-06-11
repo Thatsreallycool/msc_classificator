@@ -82,3 +82,6 @@ class ConfigClassify(ConfigGeneral):
         if val < 1:
             raise ValueError("must be positive")
         return val
+
+class ConfigEvaluate(ConfigGeneral):
+    pass
