@@ -1,6 +1,13 @@
+import json
 from json import JSONEncoder, dump
 from typing import Any, Iterator
 from collections import defaultdict
+
+import pandas as pd
+
+import base64
+import zlib
+import pickle
 
 
 class Serialize(JSONEncoder):
@@ -49,3 +56,65 @@ class Toolbox:
         :return: a list of the values
         """
         return [item[key_of_dict] for item in list_of_dicts]
+
+    @staticmethod
+    def compress(data):
+        return base64.b64encode(
+            zlib.compress(
+                pickle.dumps(data, protocol=4)
+            )
+        ).decode()
+
+    @staticmethod
+    def uncompress(pickled_data):
+        return pickle.loads(
+            zlib.decompress(
+                base64.b64decode(
+                    pickled_data.encode()
+                )
+            )
+        )
+
+    @staticmethod
+    def load_json(filename: str):
+        with open(filename, 'r') as f:
+            return json.load(f)
+
+    @staticmethod
+    def store_json(filename: str, dict2store: dict):
+        with open(filename, 'w') as f:
+            dump(dict2store, f, cls=Serialize)
+        return True
+
+    @staticmethod
+    def load_csv_data(filename: str, delimiter=','):
+        return pd.read_csv(filename, delimiter=delimiter)
+
+    def transform_csv_to_dict(
+            self,
+            filename: str,
+            delimiter: str,
+            idx_name: str,
+            column_names: list
+    ):
+        data = self.load_csv_data(filename=filename, delimiter=delimiter)
+        data_dict = {}
+        for row in range(len(data)):
+            if any(
+                [
+                    isinstance(data[item][row], float)
+                    for item in column_names
+                ]
+            ):
+                continue
+
+            idx = str(data[idx_name][row])
+            data_dict.update({idx: {}})
+            #print(len(data))
+            for item in column_names:
+                try:
+                    data_dict[idx].update({item: eval(data[item][row])})
+                except (SyntaxError, NameError):
+                    data_dict[idx].update({item: data[item][row]})
+
+        return data_dict

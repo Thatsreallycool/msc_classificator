@@ -21,6 +21,7 @@ class FilePathInput(BaseModel):
 
 class FilePathOutput(BaseModel):
     map: str = None
+    map_from_elastic: str = None
     prediction_text: str = None
     prediction_keyword: str = None
     prediction_refs: str = None
