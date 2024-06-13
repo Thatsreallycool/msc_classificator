@@ -3,12 +3,12 @@ from zb_msc_classificator.config.definition import ConfigGeneral
 import time
 import os
 
-get_from_el = False
+get_from_el = True
 write_to_file = False
 read_from_disk = False
 
 filepath = "/home/marcel/PycharmProjects/msc_classificator/" \
-           "playground/run_old_code/data/test.pickle"
+           "playground/run_old_code/data/test1.pickle"
 
 start = time.time()
 if get_from_el:

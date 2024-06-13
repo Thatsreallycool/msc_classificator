@@ -19,7 +19,7 @@ class MapElastic:
                         'bool': {
                             'must': {
                                 'range': {
-                                    'de': {'gte': 0, 'lte': 5000000}
+                                    'de': {'gte': 0, 'lte': 8000000}
                                 }
                             }
                         }
