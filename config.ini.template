@@ -9,7 +9,7 @@ test_data = out-mr.csv
 mrmscs = mrmscs_dict.json
 
 [FILEPATH OUTPUT]
-map = map.json
+map_local = map.json
 prediction_text = mscs_prediction_table_text_myk_cutoff10.csv
 prediction_keyword = mscs_prediction_table_keywords_myk_cutoff10.csv
 prediction_refs = mscs_prediction_table_references_myk_cutoff10.csv

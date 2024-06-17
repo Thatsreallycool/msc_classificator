@@ -3,8 +3,9 @@ from enum import Enum
 
 
 class TrainingSource(Enum):
-    disk = "disk"
-    elastic = "elastic"
+    elastic_live = "elastic_live"
+    elastic_snapshot = "elastic_snapshot"
+    csv = "csv"
 
 
 class DataFolder(BaseModel):
@@ -14,14 +15,14 @@ class DataFolder(BaseModel):
 
 class FilePathInput(BaseModel):
     stopwords: str = None
-    training_data: str = None
+    csv_training_data: str = None
     test_data: str = None
     mrmscs: str = None
 
 
 class FilePathOutput(BaseModel):
     map: str = None
-    map_from_elastic: str = None
+    data_elastic: str = None
     prediction_text: str = None
     prediction_keyword: str = None
     prediction_refs: str = None

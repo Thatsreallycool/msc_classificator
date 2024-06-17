@@ -12,6 +12,7 @@ class MapElastic:
     def __init__(self, config):
         self.config = config
         self.tools = Toolbox()
+        #TODO: placeholder query: if done: replace query with get_all query
         myquery = {
             "query": {
                 'function_score': {
@@ -19,7 +20,7 @@ class MapElastic:
                         'bool': {
                             'must': {
                                 'range': {
-                                    'de': {'gte': 0, 'lte': 8000}
+                                    'de': {'gte': 0, 'lte': 2500000}
                                 }
                             }
                         }
@@ -34,9 +35,10 @@ class MapElastic:
             query=myquery,
             index=self.config.admin_config.elastic.index_name
         )
-        self.store_to_disk(
-            filepath=self.config.admin_config.filepath_output.map_from_elastic
-        )
+        if self.config.store_data_elastic:
+            self.store_to_disk(
+                filepath=self.config.admin_config.filepath_output.data_elastic
+            )
 
     def get_elastic_credentials(self):
         return Elasticsearch(
@@ -55,20 +57,21 @@ class MapElastic:
             index=index
         )
 
-        return [
-            (
-                self.tools.list_of_dicts_to_list(
-                    list_of_dicts=item['_source']['keywords'],
-                    key_of_dict='text'
-                ),
-                self.tools.list_of_dicts_to_list(
-                    list_of_dicts=item['_source']['msc'],
-                    key_of_dict='code'
-                )
-            )
+        return {
+            item["_id"]:
+                {
+                    'keywords': self.tools.list_of_dicts_to_list(
+                        list_of_dicts=item['_source']['keywords'],
+                        key_of_dict='text'
+                    ),
+                    'mscs': self.tools.list_of_dicts_to_list(
+                        list_of_dicts=item['_source']['msc'],
+                        key_of_dict='code'
+                    )
+                }
             for item in results
             if 'keywords' in item['_source'] and 'msc' in item['_source']
-        ]
+        }
 
     def store_to_disk(self, filepath):
         """
@@ -91,22 +94,33 @@ class GenerateMap:
 
         self.training_data = self.get_training_data()
         self.map = self.execute()
-        if self.config.store:
+        if self.config.store_map:
             self.done = self.store()
 
     def get_training_data(self):
-        if self.config.training_source == TrainingSource.disk:
+        if self.config.training_source == TrainingSource.csv:
             return Harmonizer().transform_csv_to_list_of_tuples(
                 csv_data=self.load_from_disk(
-                    filepath=self.config.admin_config.filepath_input.training_data,
+                    filepath=self.config.admin_config.filepath_input
+                        .csv_training_data,
                     columns=['msc', 'keyword'],
                     delimiter=','
                 )
             )
-        elif self.config.training_source == TrainingSource.elastic:
-            return self.load_from_elastic(
-                elastic_file=self.config.admin_config.filepath_output.map_from_elastic
+        elif self.config.training_source == TrainingSource.elastic_snapshot:
+            data = self.load_from_elastic(
+                elastic_file=self.config.admin_config.filepath_output.data_elastic
             )
+            return [
+                (item["keywords"], item["mscs"])
+                for item in data.values()
+            ]
+        elif self.config.training_source == TrainingSource.elastic_live:
+            data = MapElastic(config=self.config).data
+            return [
+                (item["keywords"], item["mscs"])
+                for item in data.values()
+            ]
         else:
             return None
 

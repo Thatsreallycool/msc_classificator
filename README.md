@@ -21,43 +21,28 @@ for dev purposes (from main folder)
 `pip install zb_msc_classificator -r ./requirements.txt -e .`
 
 ## Coding Logic
-### msc_class_original
-#### Config File Editing
+### zb_msc_classificator
+#### Admin Config File Editing
+- **general**: 
+  - __map_source__: keyword switch:
+    - elastic: will access elastic search index with credentials (see 
+      "elastic" section)
+    - local: will load map from local file (see training_data)
 - **data_folder**: create 2 local folders and enter their location 
-  - __"load"__ for input data(stopwords, training_data, test_data). 
-  - __"save"__ for output data(prediction_[...])
-- **filepaths**: local file paths for loading and storing data
-  - __load__ (external files not created by code): 
-    - stopwords: text file separated by line breank
-    - training_data: csv file, delimiter "," with columns: "de", "msc", 
-      "text", "keyword", "refs"
-    - test_data: csv file, delimiter "," with columns: "de", "msc", 
-      "text", "keyword", "refs"
-    - mrmscs: json file, important for evaluation
-  - __save__ (files created by code):
-    - pred_text: csv file predicted msc categories based on abstract text 
-      entities
-    - pred_keyword: csv file predicted msc categories based on keyword entities
-    - pred_refs: csv file predicted msc categories based on reference msc entities
-      categories
-- **nr_msc_cutoff**: nr of entities considered for classification
+  - __"load_from"__ for input data(stopwords, training_data, test_data). 
+  - __"save_from"__ for output data(prediction_[...])
+- **filepath input**: local file paths for loading and storing data
+  - __stopwords__: text file separated by line breank
+  - __training_data__: csv file, delimiter "," with columns: "de", "msc", 
+    "text", "keyword", "refs"
+  - __test_data__: csv file, delimiter "," with columns: "de", "msc", 
+    "text", "keyword", "refs"
+  - __mrmscs__: json file, important for evaluation
+- **filepath output**:
+  - __pred_text__: ... 
+  - __pred_keyword__: ...
+  - __pred_refs__: ...
 
-#### check if all configured correctly
-- ./run/check_config.py
-- first check if all filepaths in config are set for loading 
-   - training_data
-
-#### Creating Index Matrix 
-- ./run/gen_index.py contains example code to run the generation process
-   1. parameters: 
-      1. index_category: 'keyword, 'refs' (, 'text', 'title')
-      2. km: create index mapper(dict) from entities(keys) to classes(values)
-         [optional: default=True]
-      3. km: create index mapper(dict) from classes(keys) to entities(values)
-         [optional: default=False]
-      4. overwrite: overwrite existing index files 
-         [optional: default: False]
-- output: json in data_folder set in config
 
 # TODO
 - check how text2msc works (2-3 n gram?)

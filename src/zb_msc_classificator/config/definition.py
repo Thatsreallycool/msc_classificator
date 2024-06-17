@@ -71,7 +71,8 @@ class ConfigGeneral(BaseModel):
 
 class ConfigGenerate(ConfigGeneral):
     training_source: TrainingSource
-    store: bool = False
+    store_data_elastic: bool = False
+    store_map: bool = False
 
 
 class ConfigClassify(ConfigGeneral):
@@ -82,6 +83,7 @@ class ConfigClassify(ConfigGeneral):
         if val < 1:
             raise ValueError("must be positive")
         return val
+
 
 class ConfigEvaluate(ConfigGeneral):
     pass

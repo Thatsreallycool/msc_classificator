@@ -16,7 +16,12 @@ class Prediction:
             map = json.load(f)
         return map
 
-    def get_test_data(self, data: list):
+    def get_test_data(self, data: dict):
+        """
+        TODO: placeholder method for api
+        :param data: key=de number, value=list of keyword phrases
+        :return:
+        """
         pass
 
     def get_test_data_csv(self):
@@ -48,20 +53,25 @@ class Prediction:
                 continue
         return test_dict
 
-    def execute(self):
+    def execute(self, data: dict):
+        """
+        :param data: key should be the de_number, value is list of keyword
+        phrases
+        :return: dict with key is de_number, value is list of msc codes
+        """
         mscs_predicted = {}
 
-        total = len(list(self.test_data_dict.keys()))
+        total = len(list(data.keys()))
         run = 0
         import numpy as np
         milestones = [round(n) for n in np.linspace(0, total, 10)]
-        for de, actual in self.test_data_dict.items():
+        for de, keywords in data.items():
             run += 1
             if run in milestones:
                 print(f"done: {round(run/total*100)}% ...")
             predictions = [
                 self.map[item]
-                for item in actual["keywords"]
+                for item in keywords
                 if item in self.map.keys()
             ]
 

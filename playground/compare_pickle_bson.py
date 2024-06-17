@@ -4,12 +4,15 @@ from random import randint
 from zb_msc_classificator.generate_mapper import MapElastic
 from zb_msc_classificator.config.definition import ConfigGeneral
 
-import os
-data1 = True
-data2 = False
-data3 = False
 
-data_range = 10000
+from time import time
+
+import os
+data1 = False
+data2 = False
+data3 = True
+
+data_range = 100000
 if data1:
     data = {
         str(item): randint(0, 100)
@@ -21,6 +24,7 @@ if data2:
         for item in range(data_range)
     }
 if data3:
+    start_es = time()
     data3 = MapElastic(
         config=ConfigGeneral()
     )
@@ -28,14 +32,20 @@ if data3:
         str(i): item
         for i, item in enumerate(data3.data)
     }
+    print(f"nr. of items: {len(data.keys())}")
+    print(f"it took: {round((time()-start_es)/60, 1)}min")
 
 #print(data)
 
-from time import time
 import base64
 import zlib
-filepath_pickle = "/home/marcel/data/PycharmProjects/" \
-                  "msc_classificator/playground/data/test.pickle"
+work_folder = "/home/marcel/data/PycharmProjects/" \
+                  "msc_classificator/playground/data/"
+home_folder = "/home/marcel/PycharmProjects/msc_classificator" \
+                    "/playground/run_old_code/data/"
+data_folder = home_folder
+
+filepath_pickle = data_folder+"test.pickle"
 start_pickle = time()
 import pickle
 
@@ -54,11 +64,10 @@ loaded_pickle = time()-start_pickle
 unpickle_stage3 = base64.b64decode(pickled.encode())
 unpickle_stage2 = zlib.decompress(unpickle_stage3)
 unpickle_stage1 = pickle.loads(unpickle_stage2)
-end_pickle = time()-start_pickle
+end_pickle = time()-stored_pickle -start_pickle
 print(f"pickle intact: {data == unpickle_stage1}")
 
-filepath_bson = "/home/marcel/data/PycharmProjects/" \
-                  "msc_classificator/playground/data/test.bson"
+filepath_bson = data_folder+"test.bson"
 start_bson = time()
 import bson
 bson_stage1 = bson.BSON.encode(data)
@@ -67,7 +76,7 @@ bson_stage3 = base64.b64encode(bson_stage2).decode()
 packed_bson = time() - start_bson
 with open(filepath_bson, "w") as fwb:
     fwb.write(bson_stage3)
-stored_bson = time()-start_bson
+stored_bson = time()- start_bson
 
 with open(filepath_bson, "r") as frb:
     bsoned = frb.read()
@@ -76,11 +85,10 @@ unbson_stage3 = base64.b64decode(bsoned.encode())
 unbson_stage2 = zlib.decompress(unbson_stage3)
 unbson_stage1 = bson.BSON(unbson_stage2).decode()
 # print(unbson_stage1)
-end_bson = time()-start_bson
+end_bson = time()-stored_bson - start_bson
 print(f"bson intact: {unbson_stage1==data}")
 
-filepath_zip = "/home/marcel/data/PycharmProjects/" \
-           "msc_classificator/playground/data/test.gz"
+filepath_zip = data_folder+"test.gz"
 
 start_gzip = time()
 import gzip
@@ -92,20 +100,16 @@ packed_gzip = time()-start_gzip
 with gzip.open(filepath_zip, 'rb') as fr:
     ungzip = fr.read()
 unj = json.loads(ungzip.decode())
-end_gzip = time()-start_gzip
+end_gzip = time()-packed_gzip-start_gzip
 print(f"zip intact: {data == unj}")
 
 
 print(f"pickle size: {os.path.getsize(filepath_pickle)}, "
-      f"packing: {Decimal(packed_pickle):.2E}s, "
       f"storing: {Decimal(stored_pickle):.2E}s, "
-      f"loading: {Decimal(loaded_pickle):.2E}s, "
       f"done: {Decimal(end_pickle):.2E}s")
 print("\n")
 print(f"bson size: {os.path.getsize(filepath_bson)}, "
-      f"packing: {Decimal(packed_bson):.2E}s, "
       f"storing: {Decimal(stored_bson):.2E}s, "
-      f"loading: {Decimal(loaded_bson):.2E}s, "
       f"done: {Decimal(end_bson):.2E}s")
 print("\n")
 print(f"zip size: {os.path.getsize(filepath_zip)}, "
