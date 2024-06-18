@@ -70,9 +70,24 @@ class ConfigGeneral(BaseModel):
 
 
 class ConfigGenerate(ConfigGeneral):
-    training_source: TrainingSource
+    training_source: TrainingSource = None
     store_data_elastic: bool = False
+    data_size: int = None
     store_map: bool = False
+
+    @validator("data_size", always=True)
+    def int_gt0(cls, number):
+        minimum_jump = 10000
+        if number is None:
+            return minimum_jump
+        elif number <= 0:
+            return minimum_jump
+        elif number > 0:
+            return number
+        else:
+            raise ValueError(
+                "data size addendum for datablob must be bigger than zero"
+            )
 
 
 class ConfigClassify(ConfigGeneral):

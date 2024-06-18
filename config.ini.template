@@ -4,12 +4,14 @@ save_to = /home/marcel/PycharmProjects/msc_classificator/playground/run_old_code
 
 [FILEPATH INPUT]
 stopwords = ../stopwords.txt
-training_data = out.csv
+csv_training_data = out.csv
 test_data = out-mr.csv
 mrmscs = mrmscs_dict.json
 
 [FILEPATH OUTPUT]
 map_local = map.json
+map_zipped = map.gz
+data_elastic = data.pickle
 prediction_text = mscs_prediction_table_text_myk_cutoff10.csv
 prediction_keyword = mscs_prediction_table_keywords_myk_cutoff10.csv
 prediction_refs = mscs_prediction_table_references_myk_cutoff10.csv
@@ -19,3 +21,4 @@ es_host = <host name of elastic search index>
 es_port = <port of host>
 es_api_key = <api key with reading credentials>
 ca_certs = <location on disk to certificate>
+index_name = zbmath_live_documents

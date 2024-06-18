@@ -1,0 +1,40 @@
+title: new msc classificator
+subtitle: development update
+
+structure:
+    1. introduction
+    2. msc codes need classification
+    3. graph between keywords and msc codes, counting how often
+        - linear mapping (graph/map)
+        - source es1.get_all_documents({de:(msc,kw)}
+    4. division into modules
+        - create/update training module
+        - classification
+        - evaluation (for further dev, not for production)
+    5. details:
+        - lemmatization,
+        - stopwords,
+        - long list of rare events(cutoff)
+    6. current state:
+        - library done,
+        - PS: old training data dump -> ES
+        - working on api
+        - entity linking
+    7. metrics for improvement:
+        - current:
+            + precision, recall
+            + ranking
+        - needed (asking audience) prediction counting:
+            + perfect match (correct msc codes in correct order)
+            + imperfect match (correct msc codes not in order)
+            + missing (1 or more missing but no wrong msc) - quality?
+            + FP (1 or more wrong msc)
+            + no correct predictions
+    8. improvement plans:
+        - currently cutoff by length, now cutoff by scoring
+        - not only keywords, but text phrases, reference msc as (lower)
+        weighting
+        - full bayes, including expert knowledge as prior information
+        - hyper weightings for types of documents
+        - other parts of document data (suggestions from audience are welcome)
+        - learning from corrections of human

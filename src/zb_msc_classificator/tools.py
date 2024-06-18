@@ -9,6 +9,8 @@ import base64
 import zlib
 import pickle
 
+import gzip
+
 
 class Serialize(JSONEncoder):
     def iterencode(self, o: Any, _one_shot: bool = ...) -> Iterator[str]:
@@ -118,3 +120,15 @@ class Toolbox:
                     data_dict[idx].update({item: data[item][row]})
 
         return data_dict
+
+    @staticmethod
+    def zip_store(filepath: str, json_data):
+        with gzip.open(filepath, 'wt') as fw:
+            json.dump(json_data, fw, indent=4)
+            fw.write("\n")
+
+    @staticmethod
+    def zip_load(filepath: str):
+        with gzip.open(filepath, 'rb') as fr:
+            ungzip = fr.read()
+        return json.loads(ungzip.decode())

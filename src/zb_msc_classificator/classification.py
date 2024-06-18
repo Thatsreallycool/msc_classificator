@@ -8,6 +8,7 @@ class Prediction:
     def __init__(self, config):
         self.config = config
         self.harmonizer = Harmonizer()
+        # TODO get map from zip!
         self.map = self.get_map()
         self.test_data_dict = self.get_test_data_csv()
 

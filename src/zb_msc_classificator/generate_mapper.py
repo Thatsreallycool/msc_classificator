@@ -12,33 +12,95 @@ class MapElastic:
     def __init__(self, config):
         self.config = config
         self.tools = Toolbox()
-        #TODO: placeholder query: if done: replace query with get_all query
-        myquery = {
+
+        self.previous_dataset_exists = self.check_for_datablob()
+        if self.previous_dataset_exists:
+            self.data = self.load_from_disk(
+                filepath=self.config.admin_config.filepath_output.data_elastic
+            )
+            print(f"items: {len(self.data.keys())}")
+        else:
+            self.data = {}
+
+        self.latest_id = self.get_latest_id()
+        self.query = self.get_query(
+            data_size=config.data_size
+        )
+
+    def execute(self):
+        new_data = self.get_data(
+            elastic_credentials=self.get_elastic_credentials(),
+            query=self.query,
+            index=self.config.admin_config.elastic.index_name
+        )
+        if len(new_data.keys()) == 0:
+            print("found no new items. Try bigger data_size!")
+        else:
+            self.data.update(
+                new_data
+            )
+
+            if self.config.store_data_elastic:
+                self.store_to_disk(
+                    filepath=self.config.admin_config.filepath_output.data_elastic
+                )
+
+    def check_for_datablob(self):
+        if os.path.isfile(
+            self.config.admin_config.filepath_output.data_elastic
+        ):
+            return True
+        else:
+            return False
+
+    def load_from_disk(self, filepath):
+        """
+        TODO: placeholder method until such time support decides how to
+        store this
+
+        :param filepath: filepath of formerly stored datablob
+        """
+        if self.previous_dataset_exists:
+            with open(filepath, "r") as file_read:
+                raw_data = file_read.read()
+            return self.tools.uncompress(pickled_data=raw_data)
+        else:
+            return None
+
+    def get_latest_id(self):
+        if self.previous_dataset_exists:
+            return max(
+                [
+                    int(de)
+                    for de in self.data.keys()
+                ]
+            )
+        else:
+            return 0
+
+    def get_query(self, data_size: int):
+        up = self.latest_id + data_size
+        return {
             "query": {
                 'function_score': {
                     'query': {
                         'bool': {
                             'must': {
                                 'range': {
-                                    'de': {'gte': 0, 'lte': 2500000}
+                                    'de': {
+                                        'gt': self.latest_id,
+                                        'lte': up
+                                    }
                                 }
                             }
                         }
                     },
-                    'field_value_factor': {'field': 'score_linear'}
+                    'field_value_factor': {
+                        'field': 'score_linear'
+                    }
                 }
             }
         }
-
-        self.data = self.get_data(
-            elastic_credentials=self.get_elastic_credentials(),
-            query=myquery,
-            index=self.config.admin_config.elastic.index_name
-        )
-        if self.config.store_data_elastic:
-            self.store_to_disk(
-                filepath=self.config.admin_config.filepath_output.data_elastic
-            )
 
     def get_elastic_credentials(self):
         return Elasticsearch(
@@ -51,6 +113,12 @@ class MapElastic:
         )
 
     def get_data(self, elastic_credentials, query, index):
+        print(
+            elastic_credentials.count(
+                index=index,
+                body=query
+            )
+        )
         results = scan(
             client=elastic_credentials,
             query=query,
@@ -93,9 +161,7 @@ class GenerateMap:
         self.tools = Toolbox()
 
         self.training_data = self.get_training_data()
-        self.map = self.execute()
-        if self.config.store_map:
-            self.done = self.store()
+        #self.map = self.execute()
 
     def get_training_data(self):
         if self.config.training_source == TrainingSource.csv:
@@ -159,16 +225,21 @@ class GenerateMap:
         return self.tools.uncompress(elastic_data)
 
     def execute(self):
-        map = self.tools.nested_dict(layers=2, data_type=int)
+        lin_map = self.tools.nested_dict(layers=2, data_type=int)
 
         for km_tuple in self.training_data:
             keyword_list, msc_list = km_tuple
             for keyword in keyword_list:
                 for msc in msc_list:
-                    map[keyword][msc] += 1
-        return map
+                    lin_map[keyword][msc] += 1
 
-    def store(self):
-        with open(self.config.admin_config.filepath_output.map, 'w') as f:
-            dump(self.map, f, cls=Serialize)
-        return os.path.isfile(self.config.admin_config.filepath_output.map)
+        if self.config.store_map:
+            self.store(lin_map=lin_map)
+
+        return lin_map
+
+    def store(self, lin_map):
+        self.tools.zip_store(
+            filepath=self.config.admin_config.filepath_output.map_zipped,
+            json_data=lin_map
+        )
