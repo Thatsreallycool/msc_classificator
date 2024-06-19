@@ -1,6 +1,8 @@
 import json
+import os.path
 
 from zb_msc_classificator.harmonize import Harmonizer
+from zb_msc_classificator.tools import Toolbox
 import pandas as pd
 
 
@@ -8,14 +10,18 @@ class Prediction:
     def __init__(self, config):
         self.config = config
         self.harmonizer = Harmonizer()
+        self.tools = Toolbox()
         # TODO get map from zip!
-        self.map = self.get_map()
+        self.map = self.get_map(
+            filepath=self.config.admin_config.filepath_output.map_zipped
+        )
         self.test_data_dict = self.get_test_data_csv()
 
-    def get_map(self):
-        with open(self.config.admin_config.filepath_output.map, "r") as f:
-            map = json.load(f)
-        return map
+    def get_map(self, filepath: str):
+        if os.path.isfile(filepath):
+            return self.tools.zip_load(filepath=filepath)
+        else:
+            raise FileNotFoundError("map file not found")
 
     def get_test_data(self, data: dict):
         """

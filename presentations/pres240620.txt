@@ -3,18 +3,35 @@ subtitle: development update
 
 structure:
     1. introduction
-    2. msc codes need classification
+        - predicting msc codes, currently works based on reference msc with low
+         accuracy
+         - 63 2-digit
+         - 529 3-digit
+         - 6006 5-digit
+         -> IMAGE figure1 paper
+        - challenges
+            - sparsely populated
+            - multi-label
+    2. msc codes need classification - goals
+        - develop method for 5-digit classification using keyword or abstract
+        text
+        - compare to actual truth vs human base line and reference
+        classification
+        - evaluation metrics for improvement of methods
+        -> IMAGE half figure 2 from paper
     3. graph between keywords and msc codes, counting how often
         - linear mapping (graph/map)
         - source es1.get_all_documents({de:(msc,kw)}
+        -> IMAGE my own graph?
     4. division into modules
         - create/update training module
         - classification
         - evaluation (for further dev, not for production)
+        -> IMAGE modules feed into each other
     5. details:
         - lemmatization,
         - stopwords,
-        - long list of rare events(cutoff)
+        - long tail of rare events(cutoff)
     6. current state:
         - library done,
         - PS: old training data dump -> ES
@@ -30,6 +47,7 @@ structure:
             + missing (1 or more missing but no wrong msc) - quality?
             + FP (1 or more wrong msc)
             + no correct predictions
+        - jaro winkler
     8. improvement plans:
         - currently cutoff by length, now cutoff by scoring
         - not only keywords, but text phrases, reference msc as (lower)
@@ -38,3 +56,4 @@ structure:
         - hyper weightings for types of documents
         - other parts of document data (suggestions from audience are welcome)
         - learning from corrections of human
+        - distinction types of documents
