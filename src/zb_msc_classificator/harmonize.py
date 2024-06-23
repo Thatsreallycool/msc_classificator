@@ -1,6 +1,12 @@
 import pandas as pd
 
 from zb_msc_classificator.tools import Toolbox
+from zb_msc_classificator.config.definition import ConfigGeneral
+
+from nltk.stem import WordNetLemmatizer
+from nltk.corpus import stopwords as stopwords_nltk
+
+import re
 
 
 class Harmonizer:
@@ -12,19 +18,45 @@ class Harmonizer:
     #  preprocesser = WordNetLemmatizer()
     #  entity = ' '.join([preprocesser.lemmatize(word) for word in nngram])
     #  reihenfolge train / test
-    def __init__(self):
-        self.tools = Toolbox()
+    def __init__(self, config=ConfigGeneral()):
+        self.config = config
+        self.stop_punctuation = [".", ",", ";", ":", "!", "?", " ' "]
+        self.stop_words = self.get_stopwords()
+        self.replacements = {k: "" for k in self.stop_words}
+
+    def get_stopwords(self):
+        tools = Toolbox()
+        all_stopwords = stopwords_nltk.words('english') + tools.txt_load(
+            self.config.admin_config.filepath_input.stopwords
+        )
+        return list(set(all_stopwords))
+
+    def replace_any(self, match):
+        return self.replacements[match.group(0)]
+
+    def remove_stopwords(self, text, position_in_text=None):
+        if position_in_text is None:
+            return re.sub(
+                '|'.join(r'\b%s\b' % re.escape(s) for s in self.replacements),
+                self.replace_any,
+                text
+            )
+        elif isinstance(position_in_text, int):
+            pass #TODO: if word is in positionintext remove this otherwise not
+        else:
+            pass #TODO: handle errors
 
     def transform_csv_to_list_of_tuples(self, csv_data: pd.DataFrame):
         keyword_msc_list = []
+        tools = Toolbox()
         for row in csv_data.itertuples():
-            msc_list = self.tools.str_spaces_to_list(
+            msc_list = tools.str_spaces_to_list(
                 string=self.clean_csv_data(
                     string_to_clean=row.msc
                 ),
                 delimiter=", "
             )
-            keyword_list = self.tools.str_spaces_to_list(
+            keyword_list = tools.str_spaces_to_list(
                 string=self.clean_csv_data(
                     string_to_clean=row.keyword
                 ),
@@ -36,6 +68,20 @@ class Harmonizer:
             ]
             keyword_msc_list.append((keyword_list, msc_list))
         return keyword_msc_list
+
+    def remove_punctuation(self, text: str):
+        for dot in self.stop_punctuation:
+            text = text.replace(dot, "")
+        return text
+
+    @staticmethod
+    def lemmatization(token_list):
+        preprocessor = WordNetLemmatizer()
+        return [preprocessor.lemmatize(word) for word in token_list]
+
+    @staticmethod
+    def canonicalize(text: str):
+        return text.lower()
 
     @staticmethod
     def clean_csv_data(string_to_clean: str):

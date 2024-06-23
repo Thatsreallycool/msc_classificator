@@ -5,6 +5,8 @@ from zb_msc_classificator.config.config_datamodel \
     import AdminConfig, DataFolder, FilePathInput, FilePathOutput, \
     TrainingSource, Elastic
 
+from typing import List
+
 
 class ConfigGeneral(BaseModel):
     admin_config: AdminConfig = AdminConfig()
@@ -102,3 +104,17 @@ class ConfigClassify(ConfigGeneral):
 
 class ConfigEvaluate(ConfigGeneral):
     pass
+
+
+class ConfigEntityLinking(ConfigGeneral):
+    ngram_lengths: List[int] = [2, 3]
+
+    @validator("ngram_lengths", always=True)
+    def check_positivity(cls, cfg_data):
+        assert all(
+            [
+                True if item > 0
+                else False
+                for item in cfg_data
+            ]
+        )

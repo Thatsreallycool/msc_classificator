@@ -1,4 +1,5 @@
 import json
+import os.path
 from json import JSONEncoder, dump
 from typing import Any, Iterator
 from collections import defaultdict
@@ -132,3 +133,19 @@ class Toolbox:
         with gzip.open(filepath, 'rb') as fr:
             ungzip = fr.read()
         return json.loads(ungzip.decode())
+
+    @staticmethod
+    def txt_load(filepath: str):
+        if os.path.isfile(filepath):
+            with open(filepath, "r") as file_read:
+                data = file_read.readlines()
+            return data
+        else:
+            raise FileNotFoundError(f"filepath: {filepath} not found!")
+
+    @staticmethod
+    def txt_store(filepath: str, data):
+        if os.path.isfile(filepath):
+            print(f"overwriting: {filepath}")
+        with open(filepath, "w") as file_write:
+            file_write.write(data)
