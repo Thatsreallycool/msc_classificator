@@ -40,6 +40,20 @@ class Elastic(BaseModel):
     index_name: str = None
 
 
+class ApiConfig(BaseModel):
+    root_path: str = None
+
+    @validator("root_path", always=True)
+    def no_slash_at_end(cls, path):
+        if path is not None:
+            if path.endswith("/"):
+                raise ValueError("root_path may not end with /")
+            else:
+                return path
+        else:
+            return None
+
+
 class AdminConfig(BaseModel):
     config_filename: str = "config.ini"
     zbmath_path: str = "/etc/zbmath-api/"
@@ -47,3 +61,5 @@ class AdminConfig(BaseModel):
     filepath_input: FilePathInput = FilePathInput()
     filepath_output: FilePathOutput = FilePathOutput()
     elastic: Elastic = Elastic()
+    api_config: ApiConfig = ApiConfig()
+

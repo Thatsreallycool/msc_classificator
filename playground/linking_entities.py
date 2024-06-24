@@ -34,7 +34,7 @@ example_text2 = "Online reinforcement learning (RL) is increasingly popular " \
                 "improvements have been achieved by our method compared " \
                 "with the state-of-the-art method."
 
-ctext = example_text2
+ctext = example_text0
 from zb_msc_classificator.config.definition import ConfigEntityLinking
 from zb_msc_classificator.entity_linking import EntityLink
 

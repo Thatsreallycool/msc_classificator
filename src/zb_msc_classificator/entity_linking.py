@@ -1,8 +1,9 @@
 from zb_msc_classificator.harmonize import Harmonizer
 from nltk import ngrams
 
-from SPARQLWrapper import SPARQLWrapper, JSON
 from zb_msc_classificator.tools import Toolbox
+
+from SPARQLWrapper import SPARQLWrapper, JSON
 
 
 class EntityLink:
@@ -68,7 +69,16 @@ class EntityLink:
                             'link': my_url
                         }
                     )
+                    print(
+                        type(
+                            [
+                                ngram_coords[item_nr]['start'],
+                                ngram_coords[item_nr]['end']
+                            ]
+                        )
+                    )
             print("after creating", time() - tstart)
+
         return linked_keywords
 
     def removing_entities(self, entity_list: list):

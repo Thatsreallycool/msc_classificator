@@ -3,7 +3,7 @@ import os
 from zb_msc_classificator import read_ini
 from zb_msc_classificator.config.config_datamodel \
     import AdminConfig, DataFolder, FilePathInput, FilePathOutput, \
-    TrainingSource, Elastic, Language
+    TrainingSource, Elastic, Language, ApiConfig
 
 from typing import List
 
@@ -17,6 +17,7 @@ class ConfigGeneral(BaseModel):
     def confirm_consistency(cls, cfg_data):
         filepath_options = [
             f"{cfg_data.zbmath_path}{cfg_data.config_filename}",
+            f"../../../{cfg_data.config_filename}",
             f"../../{cfg_data.config_filename}",
             f"../{cfg_data.config_filename}",
             cfg_data.config_filename
@@ -62,6 +63,7 @@ class ConfigGeneral(BaseModel):
                     for k, v in admin_cfg["FILEPATH OUTPUT"].items()
                 }
             )
+
         else:
             raise FileNotFoundError("config.ini not correct!")
 
@@ -69,7 +71,8 @@ class ConfigGeneral(BaseModel):
             data_folder=data_folder,
             filepath_input=fp_input,
             filepath_output=fp_output,
-            elastic=Elastic(**admin_cfg["ELASTIC"])
+            elastic=Elastic(**admin_cfg["ELASTIC"]),
+            api_config=ApiConfig(**admin_cfg["API"])
         )
 
 
