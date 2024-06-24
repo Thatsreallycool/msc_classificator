@@ -6,7 +6,6 @@ from zb_msc_classificator.api.data_models import Text, EntityData
 from zb_msc_classificator.entity_linking import EntityLink
 
 config = ConfigGeneral()
-
 router = APIRouter()
 el = EntityLink(config=ConfigEntityLinking())
 

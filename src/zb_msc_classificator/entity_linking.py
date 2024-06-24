@@ -1,25 +1,30 @@
-from zb_msc_classificator.harmonize import Harmonizer
 from nltk import ngrams
 
+from zb_msc_classificator.harmonize import Harmonizer
 from zb_msc_classificator.tools import Toolbox
 
 from SPARQLWrapper import SPARQLWrapper, JSON
 
 
 class EntityLink:
-    def __init__(self, config):
+    def __init__(
+            self,
+            config
+    ):
         self.config = config
         self.harmonize = Harmonizer()
         self.tools = Toolbox()
         self.map = self.tools.load_data(
             filepath=config.admin_config.filepath_output.map
         )
+        self.sparql = SPARQLWrapper(endpoint=self.config.sparql_link)
 
-    def execute(self, text):
+    def execute(
+            self,
+            text: str
+    ):
         from time import time
-        tstart = time()
         text_tokens = self.tokenize(text=text)
-        print(time()-tstart)
         preprocessed_tokens = self.harmonize.lemmatization(
             self.tokenize(
                 self.harmonize.canonicalize(
@@ -29,7 +34,6 @@ class EntityLink:
                 )
             )
         )
-        print(time() - tstart)
         linked_keywords = []
         for n in self.config.ngram_lengths:
             ngrams = self.removing_entities(
@@ -39,20 +43,16 @@ class EntityLink:
                 )
             )
 
-            print("ngrams", time() - tstart)
-            print("checked map")
             # TODO: can i make a combined sparql request for performance reasons?
             urls = [
                 self.get_wikidata_qid_wikipedia_url_sparql(entity=item)
                 for item in ngrams
             ]
-            print("after urls", time() - tstart)
             ngram_coords = self.get_ngram_coords(
                 text=text,
                 tokens=text_tokens,
                 ngram_length=n
             )
-            print("after ngram coords", time() - tstart)
             for item_nr, url in enumerate(urls):
                 if url is not None:
                     if isinstance(url, int):
@@ -69,24 +69,76 @@ class EntityLink:
                             'link': my_url
                         }
                     )
-                    print(
-                        type(
-                            [
-                                ngram_coords[item_nr]['start'],
-                                ngram_coords[item_nr]['end']
-                            ]
-                        )
-                    )
-            print("after creating", time() - tstart)
-
         return linked_keywords
 
-    def removing_entities(self, entity_list: list):
+    @staticmethod
+    def tokenize(
+            text: str,
+            separator: str = None
+    ):
+        """
+        :param text: abstract text separated usually by space
+        :param separator: default is none, then space is the separator
+        :return: text tokens
+        """
+        return text.split(separator)
+
+    @staticmethod
+    def get_ngrams(
+            tokens: list,
+            ngram_length: int
+    ):
+        """
+        input are preprocessed tokens that are turned into ngrams for keyword
+        recognition
+        :param tokens: preprocessed token
+        :param ngram_length: int- nr of token
+        :return: list of tuples from ngrams() are turend into text snippets
+        for keyword recognition in mapper
+        """
+        return [
+            ' '.join(item)
+            for item in ngrams(sequence=tokens, n=ngram_length)
+        ]
+
+    @staticmethod
+    def get_ngram_coords(
+            text: str,
+            tokens: list,
+            ngram_length: int
+    ):
+        ngram_coords = []
+        """
+        find ngrams in text to return coordinates and mark original text 
+        snippets
+        :param text: original text
+        :param tokens: original text snippets to search in text
+        :param ngram_length: length of ngram
+        :return: list of dicts:
+        [{'ngram': <str>, 'start': <int>, 'end': <int>}, {...}, ...]
+        """
+        for ngram in ngrams(sequence=tokens, n=ngram_length):
+            snippet = ' '.join(ngram)
+            start = text.find(snippet)
+            ngram_coords.append(
+                {
+                    'ngram': snippet,
+                    'start': start,
+                    'end': start + len(snippet)
+                }
+            )
+        return ngram_coords
+
+    def removing_entities(
+            self,
+            entity_list: list
+    ):
         """
         removing for performance reasons:
             - if all words are stopwords
             - if last word is stopword (only last word will be removed)
             - entities are already in list (return 2nd set of coordinates)
+            - entities that are not in mapper
         :param entity_list: a list of text snippets
         :return: a list of text snippets
         """
@@ -112,7 +164,6 @@ class EntityLink:
         ]
 
         duplicates = self.harmonize.find_duplicates(entity_list)
-        print(duplicates)
         if duplicates.keys():
             for coords in duplicates.values():
                 for dup in coords[1:len(coords)]:
@@ -129,25 +180,27 @@ class EntityLink:
         Get Wikidata QID and Wikipedia URL
         :param entity: term to find online
         :param include_aliases: bool for finding similar terms
-        :return:
+        :return: url of request
+        performance update:
+            if keyword was already search: entity is <int>: return without
+            accessing sparql
+            if keyword was removed due to being insignificant: entity is
+            None: return without sparql
         """
         if entity is None or isinstance(entity, int):
             return entity
         try:
-            # Initialize SPARQLWrapper
-            sparql = SPARQLWrapper(self.config.sparql_link)
-
             sparql_query_string = self.get_sparql_query_string(
-                entity,
-                include_aliases
+                name=entity,
+                include_aliases=include_aliases
             )
 
             # Set the query and format
-            sparql.setQuery(sparql_query_string)
-            sparql.setReturnFormat(JSON)
+            self.sparql.setQuery(sparql_query_string)
+            self.sparql.setReturnFormat(JSON)
 
             # Execute the query
-            results = sparql.query().convert()
+            results = self.sparql.query().convert()
 
             # Extract the QID and sitelink
             bindings = results['results']['bindings']
@@ -168,7 +221,11 @@ class EntityLink:
 
         return url
 
-    def get_sparql_query_string(self, name, include_aliases=True):
+    def get_sparql_query_string(
+            self,
+            name: str,
+            include_aliases=True
+    ):
         lang = self.config.language.value
         # Define the SPARQL query
         if not include_aliases:
@@ -203,51 +260,3 @@ class EntityLink:
             """
 
         return sparql_query_string
-
-    def clean_text_tokenize(self, text):
-        """
-        remove punctuation, lemmatization and potentially more preprocessing
-        routines
-        :param text: string of continous text, probably an abstract
-        :return: a continuous string of words divided by space, removed any
-        unwanted character
-        """
-        canonicalized = self.harmonize.canonicalize(text)
-        removed_stopwords = self.harmonize.remove_stopwords(canonicalized)
-        removed_punctuation = self.harmonize.remove_punctuation(
-            removed_stopwords
-        )
-        tokenized = removed_punctuation.split()
-        lemmatized = self.harmonize.lemmatization(token_list=tokenized)
-        return lemmatized
-
-    @staticmethod
-    def get_ngram_coords(text: str, tokens: list, ngram_length: int):
-        ngram_coords = []
-        for ngram in ngrams(sequence=tokens, n=ngram_length):
-            snippet = ' '.join(ngram)
-            start = text.find(snippet)
-            ngram_coords.append(
-                {
-                    'ngram': snippet,
-                    'start': start,
-                    'end': start + len(snippet)
-                }
-            )
-        return ngram_coords
-
-    @staticmethod
-    def get_ngrams(tokens: list, ngram_length: int):
-        return [
-            ' '.join(item)
-            for item in ngrams(sequence=tokens, n=ngram_length)
-        ]
-
-    @staticmethod
-    def tokenize(text: str, separator: str = None):
-        """
-        :param text: abstract text separated usually by space
-        :param separator: default is none, then space is the separator
-        :return: text tokens
-        """
-        return text.split(separator)
