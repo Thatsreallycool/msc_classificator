@@ -1,7 +1,7 @@
 import pandas as pd
 
 from zb_msc_classificator.tools import Toolbox
-from zb_msc_classificator.config.definition import ConfigGeneral
+from zb_msc_classificator.config.definition import ConfigHarmonize
 
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import stopwords as stopwords_nltk
@@ -20,17 +20,18 @@ class Harmonizer:
     #  preprocesser = WordNetLemmatizer()
     #  entity = ' '.join([preprocesser.lemmatize(word) for word in nngram])
     #  reihenfolge train / test
-    def __init__(self, config=ConfigGeneral()):
+    def __init__(self, config=ConfigHarmonize()):
         self.config = config
         self.stop_punctuation = [".", ",", ";", ":", "!", "?", " ' ", "(", ")"]
-        self.stop_words = self.get_stopwords()
-        self.replacements = {k: "" for k in self.stop_words}
+        if self.config.use_stopwords:
+            self.stop_words = self.get_stopwords()
+            self.replacements = {k: "" for k in self.stop_words}
 
     def get_stopwords(self):
         tools = Toolbox()
         language = self.config.language.name
         all_stopwords = stopwords_nltk.words(language) + tools.txt_load(
-            self.config.admin_config.filepath_input.stopwords
+            self.config.admin_config.file_paths.stopwords
         )
         return list(set(all_stopwords))
 

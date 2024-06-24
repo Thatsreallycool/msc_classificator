@@ -158,14 +158,68 @@ class Toolbox:
             raise FileNotFoundError(f"filepath: {filepath} not found!")
         return self.uncompress(pickled_data=loaded_pickle)
 
-    def load_data(self, filepath: str):
+    def pickle_saver(self, filepath: str, data):
+        with open(filepath, "w") as file_write:
+            file_write.write(self.tools.compress(self.data))
+
+    @staticmethod
+    def load_csv(filepath: str, columns: list, delimiter: str):
+        """
+
+        :param filepath: local filepath
+        :param columns: which columns shoul be loaded
+        :param delimiter: csv delimiter
+        :return: pandas dataframe
+        """
+        return pd.read_csv(
+            filepath,
+            delimiter=delimiter,
+            usecols=columns
+        )
+
+    def load_data(
+            self,
+            filepath: str,
+            csv_columns: list = None,
+            csv_delimiter: str = None
+    ):
         if filepath.endswith(".gz"):
             return self.zip_load(filepath=filepath)
         elif filepath.endswith(".pickle"):
             return self.pickle_loader(filepath=filepath)
         elif filepath.endswith(".json"):
-            self.load_json(filename=filepath)
+            return self.load_json(filename=filepath)
         elif filepath.endswith(".txt"):
-            self.txt_load(filepath=filepath)
+            return self.txt_load(filepath=filepath)
+        elif filepath.endswith(".csv"):
+            return self.load_csv(
+                filepath=filepath,
+                columns=csv_columns,
+                delimiter=csv_delimiter
+            )
+        else:
+            raise ValueError("this file extension is unknown!")
+
+    def store_data(self, filepath: str, data):
+        if filepath.endswith(".gz"):
+            self.zip_store(
+                filepath=filepath,
+                json_data=data
+            )
+        elif filepath.endswith(".pickle"):
+            self.pickle_saver(
+                filepath=filepath,
+                data=data
+            )
+        elif filepath.endswith(".json"):
+            self.store_json(
+                filename=filepath,
+                dict2store=data
+            )
+        elif filepath.endswith(".txt"):
+            self.txt_store(
+                filepath=filepath,
+                data=data
+            )
         else:
             raise ValueError("this file extension is unknown!")
