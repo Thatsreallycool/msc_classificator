@@ -149,3 +149,23 @@ class Toolbox:
             print(f"overwriting: {filepath}")
         with open(filepath, "w") as file_write:
             file_write.write(data)
+
+    def pickle_loader(self, filepath: str):
+        if os.path.isfile(filepath):
+            with open(filepath, "r") as file_reader:
+                loaded_pickle = file_reader.read()
+        else:
+            raise FileNotFoundError(f"filepath: {filepath} not found!")
+        return self.uncompress(pickled_data=loaded_pickle)
+
+    def load_data(self, filepath: str):
+        if filepath.endswith(".gz"):
+            return self.zip_load(filepath=filepath)
+        elif filepath.endswith(".pickle"):
+            return self.pickle_loader(filepath=filepath)
+        elif filepath.endswith(".json"):
+            self.load_json(filename=filepath)
+        elif filepath.endswith(".txt"):
+            self.txt_load(filepath=filepath)
+        else:
+            raise ValueError("this file extension is unknown!")

@@ -3,13 +3,15 @@ import os
 from zb_msc_classificator import read_ini
 from zb_msc_classificator.config.config_datamodel \
     import AdminConfig, DataFolder, FilePathInput, FilePathOutput, \
-    TrainingSource, Elastic
+    TrainingSource, Elastic, Language
 
 from typing import List
 
 
 class ConfigGeneral(BaseModel):
     admin_config: AdminConfig = AdminConfig()
+    language: Language = Language.english
+
 
     @validator("admin_config", always=True)
     def confirm_consistency(cls, cfg_data):
@@ -107,14 +109,19 @@ class ConfigEvaluate(ConfigGeneral):
 
 
 class ConfigEntityLinking(ConfigGeneral):
+    map_file: str = None
     ngram_lengths: List[int] = [2, 3]
+    sparql_link: str = "https://query.wikidata.org/sparql"
 
     @validator("ngram_lengths", always=True)
     def check_positivity(cls, cfg_data):
-        assert all(
+        if all(
             [
                 True if item > 0
                 else False
                 for item in cfg_data
             ]
-        )
+        ):
+            return cfg_data
+        else:
+            raise ValueError("values must always be int pos")

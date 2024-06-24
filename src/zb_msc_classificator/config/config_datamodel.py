@@ -2,6 +2,10 @@ from pydantic import BaseModel, validator
 from enum import Enum
 
 
+class Language(Enum):
+    english = 'en'
+
+
 class TrainingSource(Enum):
     elastic_live = "elastic_live"
     elastic_snapshot = "elastic_snapshot"

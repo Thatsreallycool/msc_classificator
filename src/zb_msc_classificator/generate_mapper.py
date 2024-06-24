@@ -9,6 +9,13 @@ from elasticsearch.helpers import scan
 
 
 class MapElastic:
+    """
+    input: either local csv file, or elastic search connector
+    output: dict {de: {keywords: [...] , mscs: [...]}}
+
+    future extensions can include other metadata information in connection to
+    this datablob
+    """
     def __init__(self, config):
         self.config = config
         self.tools = Toolbox()
@@ -161,7 +168,7 @@ class GenerateMap:
         self.tools = Toolbox()
 
         self.training_data = self.get_training_data()
-        #self.map = self.execute()
+        self.map = self.execute()
 
     def get_training_data(self):
         if self.config.training_source == TrainingSource.csv:
