@@ -31,7 +31,6 @@ class MapElastic:
             self.data = self.tools.load_data(
                 filepath=self.config.admin_config.file_paths.data_stored
             )
-            print(f"items: {len(self.data.keys())}")
         else:
             self.data = {}
 
@@ -57,11 +56,13 @@ class MapElastic:
             print("found no new items. Try bigger data_size!")
         else:
             self.data.update(new_data)
+            print(f"items collected: {len(self.data.keys())}")
             if self.config.store_data:
                 self.tools.store_data(
                     filepath=self.config.admin_config.file_paths.data_stored,
                     data=self.data
                 )
+
 
     def check_for_datablob(self):
         """
