@@ -1,0 +1,44 @@
+title: robust configuration management
+subtitle: with pydantic
+
+structure:
+    - problem definition: configs are dicts/.ini need to be parsed
+        + usually my config were dicts in combination
+        + with admin config parser
+        + wrong input -> traceback, what went wrong
+        + Documentation of config: keeping list
+            * writing README
+            * DocSTrings
+            * wikis
+    - a lot of config managers / data validation suites
+        + simple solution: pydantic (v1 on our machines) v2 better for
+        documentation
+    - how to do it in pydantic
+        + simple example
+            * already simple validation
+        + import external data (config.ini from admins)
+            ...
+        + Useful Types
+            * positiveInt / Float / Negative, ...
+            * StrictBool - T/F
+            * FilePath, DirectoryPath (exist check included)
+            * PastDate, FutureDate, AwareDatetime (TZ!)
+            * EmailStr (valid email, extra package)
+            * Secret - hides this from traceback, logging etc
+    - validators - for customized validation checks, e.g.
+        * Fallbacks: if...then
+        * Dynamic Values: if not provided, get from system (e.g. how
+        many cpu_cores)
+        * Deprecation Warnings: warning if provided value outside of range of
+        application
+    - documentation:
+        * sphinx extension: autodoc_pydantic build html docs from docstrings
+        * example config with docstrings
+        * upsides:
+            + 1 place to provide documentation
+            + inline
+        * downsides:
+            + sphinx a bit of a learning curve
+            + versions not supported by debian bullseye (bookwyrm ok)
+    - summary:
+        + my experience, start new project - documentation...
