@@ -1,54 +1,44 @@
-from zb_msc_classificator.classification import Prediction
 from zb_msc_classificator.config.definition import ConfigClassify
+from zb_msc_classificator.classification import Prediction
 
-prediction = Prediction(
+from tests.testfiles.example_test_set import example_test_set
+
+classify = Prediction(
     config=ConfigClassify()
 )
 
-prediction.map = {
-    "keyword1": {
-        "code1": 1,
-        "code2": 2,
-        "code3": 3
-    },
-    "keyword2": {
-        "code1": 2,
-        "code3": 10
-    },
-    "keyword3": {
-        "code1": 10,
-        "code2": 3
-    },
-    "keyword4": {
-        "code4": 4
-    }
-}
-prediction.test_data_dict = {
-    1: {
-        "keywords": ["keyword1", "keyword2"],
-        "mscs": ["code1", "code2"]
-    },
-    2: {
-        "keywords": ["keyword1", "keyword3"],
-        "mscs": ["code3 ", "code2"]
-    },
-    3: {
-        "keywords": ["keyword3", "keyword2"],
-        "mscs": ["code3", "code1"]
-    },
-    4: {
-        "keywords": ["keyword4", "keyword1"],
-        "mscs": ["code1"]
-    }
-}
+result = classify.execute(data=example_test_set)
 
-expected_result = {
-    1: {'code1': 3, 'code2': 2, 'code3': 13},
-    2: {'code1': 11, 'code2': 5, 'code3': 3},
-    3: {'code1': 12, 'code2': 3, 'code3': 10},
-    4: {'code1': 1, 'code2': 2, 'code3': 3, 'code4': 4}
-}
+print(result)
+sorted_result = {}
+for kr, vr in result.items():
+    sorted_result.update(
+        {
+            kr: {
+                k: v for k, v in sorted(
+                    vr.items(),
+                    key=lambda item: item[1],
+                    reverse=True
+                )
+            }
+        }
+    )
+cutoff_result = {}
+for kc, vc in sorted_result.items():
+    cutoff_result.update(
+        {
+            kc: {
+                msc: vc[msc]
+                for place, msc in enumerate(vc.keys())
+                if place<10
+            }
+        }
+    )
 
-print(
-    prediction.execute()
+print(sorted_result)
+print(cutoff_result)
+
+classify.tools.store_data(
+    filepath="/home/marcel/data/test_data.json",
+    data=example_test_set
 )

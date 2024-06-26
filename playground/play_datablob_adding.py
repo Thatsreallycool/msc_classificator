@@ -8,7 +8,7 @@ for i in range(50):
     run = MapElastic(
         config=ConfigGenerate(
             store_data_elastic=True,
-            data_size=10000
+            data_size=1000000
         )
     )
     print(run.query)
