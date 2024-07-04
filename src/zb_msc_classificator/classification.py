@@ -28,6 +28,8 @@ class Prediction:
         import numpy as np
         milestones = [round(n) for n in np.linspace(0, total, 10)]
         for de, keywords in data.items():
+            if len(keywords) == 0:
+                continue
             run += 1
             if run in milestones:
                 print(f"done: {round(run/total*100)}% ...")

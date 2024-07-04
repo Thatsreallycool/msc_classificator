@@ -8,3 +8,4 @@ elasticsearch ~= 7.17.4
 sparqlwrapper ~= 1.8.5
 fastapi ~= 0.63.0
 uvicorn ~= 0.13.3
+unidecode ~= 1.2.0

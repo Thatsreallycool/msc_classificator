@@ -10,6 +10,7 @@ import re
 
 import collections
 
+import unidecode
 
 class Harmonizer:
     # TODO: remove more special ,
@@ -144,3 +145,7 @@ class Harmonizer:
             for clean_from in [',', "'", '"', "`", '\\']:
                 string_to_clean = string_to_clean.strip(clean_from)
             return string_to_clean
+
+    @staticmethod
+    def remove_accents(string_to_clean: str):
+        return unidecode.unidecode(string_to_clean)

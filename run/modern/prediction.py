@@ -7,7 +7,11 @@ classify = Prediction(
     config=ConfigClassify()
 )
 
-result = classify.execute(data=example_test_set)
+test_data = {
+    de: values["editor"]["keywords"]
+    for de, values in example_test_set.items()
+}
+result = classify.execute(data=test_data)
 
 print(result)
 sorted_result = {}

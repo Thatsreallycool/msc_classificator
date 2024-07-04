@@ -249,8 +249,17 @@ class GenerateMap:
 
     def harmonization_protocol(self, data: list):
         return [
-            self.harmonize.canonicalize(
-                text=item
+            ' '.join(
+                self.harmonize.lemmatization(
+                    token_list=self.harmonize.remove_accents(
+                        string_to_clean=self.harmonize.remove_stopwords(
+                            text=self.harmonize.canonicalize(
+                                text=item
+                            ),
+                            position_in_text=-1
+                        )
+                    ).split()
+                )
             )
             for item in data
         ]
