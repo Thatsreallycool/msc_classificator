@@ -4,6 +4,11 @@ from enum import Enum
 import os
 
 
+class FilterDocuments(BaseModel):
+    publication_year_start: int = None
+    state: str = None
+
+
 class Language(Enum):
     english = 'en'
 
@@ -37,18 +42,19 @@ class Elastic(BaseModel):
 
 
 class FilePaths(BaseModel):
-    data_stored: str = None
-    map_stored: str = None
-    stopwords: str = None
+    data_set: str = None
+    keywords_allowed: str = None
     lemmatizer: str = None
+    map: str = None
+    stopwords_denied: str = None
 
 
 class AdminConfig(BaseModel):
-    config_filename: str = "config.ini"
-    zbmath_path: str = "/etc/zbmath-api/"
     api_config: ApiConfig = ApiConfig()
+    config_filename: str = "config.ini"
     elastic: Elastic = Elastic()
     file_paths: FilePaths = FilePaths()
+    zbmath_path: str = "/etc/zbmath-api/"
 
 
 

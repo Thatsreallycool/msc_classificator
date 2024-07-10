@@ -160,7 +160,7 @@ class Toolbox:
 
     def pickle_saver(self, filepath: str, data):
         with open(filepath, "w") as file_write:
-            file_write.write(self.tools.compress(self.data))
+            file_write.write(self.compress(self.data))
 
     @staticmethod
     def load_csv(filepath: str, columns: list, delimiter: str):
@@ -201,6 +201,7 @@ class Toolbox:
             raise ValueError("this file extension is unknown!")
 
     def store_data(self, filepath: str, data):
+        print(f"data is stored to {filepath}")
         if filepath.endswith(".gz"):
             self.zip_store(
                 filepath=filepath,

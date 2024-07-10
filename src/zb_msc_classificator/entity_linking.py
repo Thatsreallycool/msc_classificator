@@ -3,6 +3,9 @@ from nltk import ngrams
 from zb_msc_classificator.harmonize import Harmonizer
 from zb_msc_classificator.tools import Toolbox
 
+from zb_msc_classificator.generate_mapper import GenerateMap
+from zb_msc_classificator.config.definition import ConfigGenerate
+
 from SPARQLWrapper import SPARQLWrapper, JSON
 
 
@@ -14,16 +17,13 @@ class EntityLink:
         self.config = config
         self.harmonize = Harmonizer()
         self.tools = Toolbox()
-        self.map = self.tools.load_data(
-            filepath=config.admin_config.filepath_output.map
-        )
+        self.keywords_allowed = self.get_allow_list_keywords()
         self.sparql = SPARQLWrapper(endpoint=self.config.sparql_link)
 
     def execute(
             self,
             text: str
     ):
-        from time import time
         text_tokens = self.tokenize(text=text)
         preprocessed_tokens = self.harmonize.lemmatization(
             self.tokenize(
@@ -260,3 +260,14 @@ class EntityLink:
             """
 
         return sparql_query_string
+
+    def get_allow_list_keywords(self, generate=False):
+        if generate:
+            gen = GenerateMap(
+                config=ConfigGenerate()
+            )
+            return list(gen.execute().keys())
+        else:
+            return self.tools.load_data(
+                filepath=self.config.admin_config.file_paths.keywords_allowed
+            )

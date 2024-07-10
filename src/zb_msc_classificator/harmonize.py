@@ -12,6 +12,7 @@ import collections
 
 import unidecode
 
+
 class Harmonizer:
     # TODO: remove more special ,
     #  - stop_punctuation = '.,;:!?' # ()\\"\'[]{}<>`~@#$%^&*_-=+|/
@@ -21,7 +22,10 @@ class Harmonizer:
     #  preprocesser = WordNetLemmatizer()
     #  entity = ' '.join([preprocesser.lemmatize(word) for word in nngram])
     #  reihenfolge train / test
-    def __init__(self, config=ConfigHarmonize()):
+    def __init__(
+            self,
+            config: ConfigHarmonize = ConfigHarmonize()
+    ):
         self.config = config
         self.stop_punctuation = [".", ",", ";", ":", "!", "?", " ' ", "(", ")"]
         if self.config.use_stopwords:

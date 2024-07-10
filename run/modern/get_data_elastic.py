@@ -1,12 +1,13 @@
 from zb_msc_classificator.config.definition import ConfigMap
 from zb_msc_classificator.generate_mapper import MapElastic
+
 from time import time
 
 start = time()
 collector = MapElastic(
     config=ConfigMap(
         store_data=True,
-        data_size=500000
+        data_size=50000
     )
 )
 collector.execute()

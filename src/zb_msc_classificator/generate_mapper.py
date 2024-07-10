@@ -1,6 +1,7 @@
 from zb_msc_classificator.tools import Toolbox
 from zb_msc_classificator.harmonize import Harmonizer
-from zb_msc_classificator.config.definition import ConfigHarmonize
+from zb_msc_classificator.config.definition import \
+    ConfigHarmonize, ConfigGeneral
 
 from zb_msc_classificator.config.config_datamodel import TrainingSource
 import os
@@ -29,7 +30,7 @@ class MapElastic:
         self.previous_dataset_exists = self.check_for_datablob()
         if self.previous_dataset_exists:
             self.data = self.tools.load_data(
-                filepath=self.config.admin_config.file_paths.data_stored
+                filepath=self.config.admin_config.file_paths.data_set
             )
         else:
             self.data = {}
@@ -59,10 +60,9 @@ class MapElastic:
             print(f"items collected: {len(self.data.keys())}")
             if self.config.store_data:
                 self.tools.store_data(
-                    filepath=self.config.admin_config.file_paths.data_stored,
+                    filepath=self.config.admin_config.file_paths.data_set,
                     data=self.data
                 )
-
 
     def check_for_datablob(self):
         """
@@ -70,7 +70,7 @@ class MapElastic:
         :return:
         """
         if os.path.isfile(
-            self.config.admin_config.file_paths.data_stored
+            self.config.admin_config.file_paths.data_set
         ):
             return True
         else:
@@ -142,7 +142,8 @@ class MapElastic:
 
     def get_data(self, elastic_credentials, query, index):
         """
-        get data from elastic search index
+        get data from elastic search index. if more data needed, add to this
+        dict
 
         :param elastic_credentials: Elastic Search init object
         :param query: search query for elastic search
@@ -184,13 +185,18 @@ class GenerateMap:
         self.config = config
         self.tools = Toolbox()
         self.harmonize = Harmonizer(
-            config=ConfigHarmonize(use_stopwords=False)
+            config=ConfigHarmonize(
+                use_stopwords=False
+            )
         )
 
         self.training_data = self.get_training_data()
 
     def execute(self):
-        lin_map = self.tools.nested_dict(layers=2, data_type=int)
+        lin_map = self.tools.nested_dict(
+            layers=2,
+            data_type=int
+        )
 
         for km_tuple in self.training_data:
             keyword_list, msc_list = km_tuple

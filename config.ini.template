@@ -1,20 +1,14 @@
-[DATA FOLDER]
-load_from = /home/marcel/PycharmProjects/msc_classificator/playground/run_old_code/data/
-save_to = /home/marcel/PycharmProjects/msc_classificator/playground/run_old_code/data/
+[FILEPATHS]
+data_folder = /home/marcel/data/projects/msc_fine_grained/240710/
+data_set = data.gz
+keywords_allowed = kw_allow_list.gz
+lemmatizer = lemma.gz
+map = map.gz
+stopwords_denied = stopwords.gz
 
-[FILEPATH INPUT]
-stopwords = ../stopwords.txt
-csv_training_data = out.csv
-test_data = out-mr.csv
-mrmscs = mrmscs_dict.json
+[API]
+root_path =
 
-[FILEPATH OUTPUT]
-map_local = map.json
-map_zipped = map.gz
-data_elastic = data.pickle
-prediction_text = mscs_prediction_table_text_myk_cutoff10.csv
-prediction_keyword = mscs_prediction_table_keywords_myk_cutoff10.csv
-prediction_refs = mscs_prediction_table_references_myk_cutoff10.csv
 
 [ELASTIC]
 es_host = <host name of elastic search index>

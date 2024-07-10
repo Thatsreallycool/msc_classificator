@@ -3,7 +3,7 @@ import os
 from zb_msc_classificator import read_ini
 from zb_msc_classificator.config.config_datamodel \
     import AdminConfig, FilePaths, \
-    TrainingSource, Elastic, Language, ApiConfig
+    TrainingSource, Elastic, Language, ApiConfig, FilterDocuments
 
 from typing import List
 
@@ -32,16 +32,23 @@ class ConfigGeneral(BaseModel):
             raise FileNotFoundError("config.ini not found!")
         admin_cfg = read_ini(file_path=config_filepath)
 
+        filepaths = {
+            k: f"{admin_cfg['FILEPATHS']['data_folder']}{v}"
+            for k, v in admin_cfg["FILEPATHS"].items()
+            if not k == 'data_folder'
+        }
+
         return AdminConfig(
             api_config=ApiConfig(**admin_cfg["API"]),
             elastic=Elastic(**admin_cfg["ELASTIC"]),
-            file_paths=FilePaths(**admin_cfg["FILE PATHS"])
+            file_paths=FilePaths(**filepaths)
         )
 
 
 class ConfigMap(ConfigGeneral):
     store_data: bool = False
     data_size: int = None
+    filter_documents: FilterDocuments = FilterDocuments()
 
     @validator("data_size", always=True)
     def int_gt0(cls, number):
