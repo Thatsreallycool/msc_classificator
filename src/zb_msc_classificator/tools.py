@@ -51,11 +51,17 @@ class Toolbox:
             return defaultdict(lambda: self.nested_dict(layers - 1, data_type))
 
     @staticmethod
-    def str_spaces_to_list(string: str, delimiter: str):
+    def str_spaces_to_list(
+            string: str,
+            delimiter: str
+    ):
         return string.split(delimiter)
 
     @staticmethod
-    def list_of_dicts_to_list(list_of_dicts, key_of_dict):
+    def list_of_dicts_to_list(
+            list_of_dicts,
+            key_of_dict
+    ):
         """
         [{key:val1},{key:val2},...] -> [val1,val2,...]
         :param list_of_dicts: a list of dicts containing the same subkey
@@ -88,13 +94,19 @@ class Toolbox:
             return json.load(f)
 
     @staticmethod
-    def store_json(filename: str, dict2store: dict):
+    def store_json(
+            filename: str,
+            dict2store: dict
+    ):
         with open(filename, 'w') as f:
             dump(dict2store, f, cls=Serialize)
         return True
 
     @staticmethod
-    def load_csv_data(filename: str, delimiter=','):
+    def load_csv_data(
+            filename: str,
+            delimiter=','
+    ):
         return pd.read_csv(filename, delimiter=delimiter)
 
     def transform_csv_to_dict(
@@ -127,7 +139,10 @@ class Toolbox:
         return data_dict
 
     @staticmethod
-    def zip_store(filepath: str, json_data):
+    def zip_store(
+            filepath: str,
+            json_data
+    ):
         with gzip.open(filepath, 'wt') as fw:
             json.dump(json_data, fw, indent=4)
             fw.write("\n")
@@ -148,13 +163,19 @@ class Toolbox:
             raise FileNotFoundError(f"filepath: {filepath} not found!")
 
     @staticmethod
-    def txt_store(filepath: str, data):
+    def txt_store(
+            filepath: str,
+            data
+    ):
         if os.path.isfile(filepath):
             print(f"overwriting: {filepath}")
         with open(filepath, "w") as file_write:
             file_write.write(data)
 
-    def pickle_loader(self, filepath: str):
+    def pickle_loader(
+            self,
+            filepath: str
+    ):
         if os.path.isfile(filepath):
             with open(filepath, "r") as file_reader:
                 loaded_pickle = file_reader.read()
@@ -162,12 +183,20 @@ class Toolbox:
             raise FileNotFoundError(f"filepath: {filepath} not found!")
         return self.uncompress(pickled_data=loaded_pickle)
 
-    def pickle_saver(self, filepath: str, data):
+    def pickle_saver(
+            self,
+            filepath: str,
+            data
+    ):
         with open(filepath, "w") as file_write:
-            file_write.write(self.compress(self.data))
+            file_write.write(self.compress(data))
 
     @staticmethod
-    def load_csv(filepath: str, columns: list, delimiter: str):
+    def load_csv(
+            filepath: str,
+            columns: list,
+            delimiter: str
+    ):
         """
 
         :param filepath: local filepath
@@ -204,7 +233,11 @@ class Toolbox:
         else:
             raise ValueError("this file extension is unknown!")
 
-    def store_data(self, filepath: str, data):
+    def store_data(
+            self,
+            filepath: str,
+            data
+    ):
         print(f"data is stored to {filepath}")
         if filepath.endswith(".gz"):
             self.zip_store(
