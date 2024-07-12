@@ -1,19 +1,18 @@
 from zb_msc_classificator.tools import Toolbox
 from zb_msc_classificator.harmonize import Harmonizer
-from zb_msc_classificator.config.definition import ConfigHarmonize
-import pandas as pd
+from zb_msc_classificator.config.definition \
+    import ConfigHarmonize, ConfigClassify
+import numpy as np
 
 
 class Prediction:
-    def __init__(self, config):
+    def __init__(self, config: ConfigClassify = ConfigClassify()):
         self.config = config
         self.tools = Toolbox()
         self.harmonizer = Harmonizer(
             config=ConfigHarmonize(use_stopwords=False)
         )
         self.map = self.get_map()
-        # TODO: load data, transform into dict
-        #   { <de>: [<keyword>, ...], ... }
 
     def execute(self, data: dict):
         """
@@ -25,7 +24,7 @@ class Prediction:
 
         total = len(list(data.keys()))
         run = 0
-        import numpy as np
+
         milestones = [round(n) for n in np.linspace(0, total, 10)]
         for de, keywords in data.items():
             if len(keywords) == 0:
@@ -33,6 +32,7 @@ class Prediction:
             run += 1
             if run in milestones:
                 print(f"done: {round(run/total*100)}% ...")
+
             predictions = [
                 self.map[item]
                 for item in keywords
@@ -40,25 +40,25 @@ class Prediction:
             ]
 
             convoluted = {}
-            for k in set(k for d in predictions for k in d):
-                convoluted[k] = sum(
+            for msc_code in set(
+                    msc_code
+                    for msc_dict in predictions
+                    for msc_code in msc_dict
+            ):
+                convoluted[msc_code] = sum(
                     [
-                        d[k]
-                        for d in predictions
-                        if k in d
+                        msc_dict[msc_code]
+                        for msc_dict in predictions
+                        if msc_code in msc_dict
                     ]
                 )
-            mscs_predicted.update(
-                {
-                    str(de): convoluted
-                }
-            )
+            mscs_predicted.update({str(de): convoluted})
 
         return mscs_predicted
 
     def get_map(self):
         return self.tools.load_data(
-            filepath=self.config.admin_config.file_paths.map_stored
+            filepath=self.config.admin_config.file_paths.map
         )
 
     def get_data_to_classify(self, data):

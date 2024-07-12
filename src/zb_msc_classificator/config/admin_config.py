@@ -1,8 +1,9 @@
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, validator, FilePath
+from typing import Optional
 
 
 class ApiConfig(BaseModel):
-    root_path: str = None
+    root_path: Optional[str] = None
 
     @validator("root_path", always=True)
     def no_slash_at_end(cls, path):
@@ -16,18 +17,18 @@ class ApiConfig(BaseModel):
 
 
 class Elastic(BaseModel):
-    ca_certs: str = None
-    es_api_key: str = None
-    es_host: str = None
-    es_port: str = None
-    index_name: str = None
-    meta_index: str = None
+    ca_certs: Optional[str] = None
+    es_api_key: Optional[str] = None
+    es_host: Optional[str] = None
+    es_port: Optional[str] = None
+    index_name: Optional[str] = None
+    meta_index: Optional[str] = None
 
 
 class FilePaths(BaseModel):
-    data_set: str = None
-    keywords_allowed: str = None
-    map: str = None
+    data_set: Optional[str] = None
+    keywords_allowed: Optional[str] = None
+    map: Optional[str] = None
 
 
 class AdminConfig(BaseModel):

@@ -1,5 +1,5 @@
-from pydantic import BaseModel, ValidationError, validator, \
-    FilePath, DirectoryPath
+from pydantic import BaseModel, validator, PositiveInt
+from typing import Optional
 import os
 
 import nltk
@@ -17,7 +17,7 @@ class ConfigGeneral(BaseModel):
     admin_config: AdminConfig = AdminConfig()
     language: Language = Language.english
 
-    @validator("admin_config", always=True)
+    @validator("admin_config", pre=True, always=True)
     def confirm_consistency(cls, cfg_data):
         filepath_options = [
             f"{cfg_data.zbmath_path}{cfg_data.config_filename}",
@@ -51,7 +51,7 @@ class ConfigGeneral(BaseModel):
 
 
 class ConfigMap(ConfigGeneral):
-    data_size: int = 1000000
+    data_size: int = 50000
     diff_only: bool = True
     filter_documents: FilterDocuments = FilterDocuments()
     store_data: bool = False
@@ -72,7 +72,7 @@ class ConfigMap(ConfigGeneral):
 
 
 class ConfigGenerate(ConfigGeneral):
-    training_source: TrainingSource = None
+    training_source: TrainingSource = TrainingSource.elastic_snapshot
     store_map: bool = False
 
 
@@ -91,22 +91,9 @@ class ConfigEvaluate(ConfigGeneral):
 
 
 class ConfigEntityLinking(ConfigGeneral):
-    map_file: str = None
-    ngram_lengths: List[int] = [2, 3]
+    map_file: Optional[str] = None
+    ngram_lengths: List[PositiveInt] = [2, 3]
     sparql_link: str = "https://query.wikidata.org/sparql"
-
-    @validator("ngram_lengths", always=True)
-    def check_positivity(cls, cfg_data):
-        if all(
-            [
-                True if item > 0
-                else False
-                for item in cfg_data
-            ]
-        ):
-            return cfg_data
-        else:
-            raise ValueError("values must always be int pos")
 
 
 class ConfigHarmonize(ConfigGeneral):
