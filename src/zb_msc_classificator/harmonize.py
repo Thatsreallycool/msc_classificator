@@ -26,6 +26,7 @@ class Harmonizer:
             self,
             config: ConfigHarmonize = ConfigHarmonize()
     ):
+        self.tools = Toolbox()
         self.config = config
         self.stop_punctuation = [".", ",", ";", ":", "!", "?", " ' ", "(", ")"]
         if self.config.use_stopwords:
@@ -33,10 +34,16 @@ class Harmonizer:
             self.replacements = {k: "" for k in self.stop_words}
 
     def get_stopwords(self):
-        tools = Toolbox()
         language = self.config.language.name
-        all_stopwords = stopwords_nltk.words(language) + tools.txt_load(
-            self.config.admin_config.file_paths.stopwords
+        try:
+            nltk_stopwords = stopwords_nltk.words(language)
+        except LookupError:
+            nltk_stopwords = []
+
+        all_stopwords = nltk_stopwords + self.tools.txt_load(
+            filepath=self.tools.get_project_path(
+                project_folder=self.config.custom_stopwords_filepath
+            )
         )
         return list(set(all_stopwords))
 
@@ -85,15 +92,14 @@ class Harmonizer:
 
     def transform_csv_to_list_of_tuples(self, csv_data: pd.DataFrame):
         keyword_msc_list = []
-        tools = Toolbox()
         for row in csv_data.itertuples():
-            msc_list = tools.str_spaces_to_list(
+            msc_list = self.tools.str_spaces_to_list(
                 string=self.clean_csv_data(
                     string_to_clean=row.msc
                 ),
                 delimiter=", "
             )
-            keyword_list = tools.str_spaces_to_list(
+            keyword_list = self.tools.str_spaces_to_list(
                 string=self.clean_csv_data(
                     string_to_clean=row.keyword
                 ),
@@ -114,7 +120,10 @@ class Harmonizer:
     @staticmethod
     def lemmatization(token_list):
         preprocessor = WordNetLemmatizer()
-        return [preprocessor.lemmatize(word) for word in token_list]
+        try:
+            return [preprocessor.lemmatize(word) for word in token_list]
+        except LookupError:
+            return token_list
 
     @staticmethod
     def canonicalize(text: str):

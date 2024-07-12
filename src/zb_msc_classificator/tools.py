@@ -12,6 +12,10 @@ import pickle
 
 import gzip
 
+import zb_msc_classificator
+
+from configparser import ConfigParser
+
 
 class Serialize(JSONEncoder):
     def iterencode(self, o: Any, _one_shot: bool = ...) -> Iterator[str]:
@@ -224,3 +228,37 @@ class Toolbox:
             )
         else:
             raise ValueError("this file extension is unknown!")
+
+    @staticmethod
+    def get_project_path(project_folder: str = None):
+        project_path = os.path.dirname(zb_msc_classificator.__file__)
+        if project_folder is None:
+            return f"{project_path}/"
+        elif isinstance(project_folder, str):
+            return f"{project_path}/{project_folder.strip('/')}/"
+        else:
+            raise TypeError("project folder must be a string!")
+
+    @staticmethod
+    def read_ini_file(file_path: str):
+        """
+            purpose: configuration data is read in
+
+            :param file_path: config file path, should in the same folder as main.py
+            meant for configuration of database server
+
+            :return: dictionary with all config data ("key" = "value")
+            (see config.ini.template)
+
+            """
+        if not os.path.exists(file_path):
+            raise Exception("config file not found!")
+        config = ConfigParser()
+        config.read(file_path)
+
+        my_config = {}
+        for section in config.sections():
+            my_config[section] = {}
+            for key in config[section]:
+                my_config[section][key] = config[section][key]
+        return my_config

@@ -1,6 +1,12 @@
-from pydantic import BaseModel, ValidationError, validator
+from pydantic import BaseModel, ValidationError, validator, \
+    FilePath, DirectoryPath
 import os
-from zb_msc_classificator import read_ini
+
+from zb_msc_classificator.tools import Toolbox
+
+import nltk
+
+import zb_msc_classificator as zbc
 from zb_msc_classificator.config.config_datamodel \
     import AdminConfig, FilePaths, \
     TrainingSource, Elastic, Language, ApiConfig, FilterDocuments
@@ -30,7 +36,7 @@ class ConfigGeneral(BaseModel):
             config_filepath = filepath_options[viable_paths.index(True)]
         else:
             raise FileNotFoundError("config.ini not found!")
-        admin_cfg = read_ini(file_path=config_filepath)
+        admin_cfg = Toolbox().read_ini_file(file_path=config_filepath)
 
         filepaths = {
             k: f"{admin_cfg['FILEPATHS']['data_folder']}{v}"
@@ -105,3 +111,12 @@ class ConfigEntityLinking(ConfigGeneral):
 
 class ConfigHarmonize(ConfigGeneral):
     use_stopwords: bool = True
+    custom_stopwords_filepath: str = "/data/stopwords.txt"
+    nltk_directory: str = "/nltk_data"
+
+    @validator("use_stopwords", always=True)
+    def check_for_nltk_data_path(cls, use_stopwords):
+        if use_stopwords:
+            package_path = os.path.dirname(zbc.__file__)
+            nltk.data.path = [f"{package_path}/../nltk_data"]
+        return use_stopwords
