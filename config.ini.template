@@ -1,14 +1,5 @@
-[FILEPATHS]
-data_folder = /home/marcel/data/projects/msc_fine_grained/240710/
-data_set = data.gz
-keywords_allowed = kw_allow_list.gz
-lemmatizer = lemma.gz
-map = map.gz
-stopwords_denied = stopwords.gz
-
 [API]
-root_path =
-
+root_path = <proxy reroute>
 
 [ELASTIC]
 es_host = <host name of elastic search index>
@@ -16,3 +7,11 @@ es_port = <port of host>
 es_api_key = <api key with reading credentials>
 ca_certs = <location on disk to certificate>
 index_name = zbmath_live_documents
+
+[FILEPATHS]
+data_folder = <absolute/local/path/on/client/where/code/runs/>
+data_set = <write and read, accepted file types: *.gz, *.pickle, *.bson>
+keywords_allowed = <write and read, accepted file types: *.gz, *.pickle, *.bson>
+map = <write and read, accepted file types: *.gz, *.pickle, *.bson>
+
+
