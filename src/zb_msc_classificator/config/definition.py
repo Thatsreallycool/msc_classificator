@@ -77,13 +77,7 @@ class ConfigGenerate(ConfigGeneral):
 
 
 class ConfigClassify(ConfigGeneral):
-    nr_msc_cutoff: int = 10
-
-    @validator("nr_msc_cutoff")
-    def msc_cutoff_pos_int(cls, val):
-        if val < 1:
-            raise ValueError("must be positive")
-        return val
+    nr_msc_cutoff: PositiveInt = 10
 
 
 class ConfigEvaluate(ConfigGeneral):
