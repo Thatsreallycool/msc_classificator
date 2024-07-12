@@ -6,8 +6,7 @@ from time import time
 start = time()
 collector = MapElastic(
     config=ConfigMap(
-        store_data=True,
-        data_size=50000
+        store_data=True
     )
 )
 collector.execute()

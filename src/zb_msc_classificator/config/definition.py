@@ -51,9 +51,10 @@ class ConfigGeneral(BaseModel):
 
 
 class ConfigMap(ConfigGeneral):
-    store_data: bool = False
-    data_size: int = None
+    data_size: int = 1000000
+    diff_only: bool = True
     filter_documents: FilterDocuments = FilterDocuments()
+    store_data: bool = False
 
     @validator("data_size", always=True)
     def int_gt0(cls, number):

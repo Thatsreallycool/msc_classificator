@@ -3,8 +3,8 @@ from enum import Enum
 
 
 class FilterDocuments(BaseModel):
-    publication_year_start: int = None
-    state: str = None
+    publication_year_start: int = 2000
+    state: str = "j"
 
 
 class Language(Enum):

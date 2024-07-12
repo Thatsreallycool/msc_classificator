@@ -1,13 +1,17 @@
 from zb_msc_classificator.tools import Toolbox
 from zb_msc_classificator.harmonize import Harmonizer
 from zb_msc_classificator.config.definition import \
-    ConfigHarmonize, ConfigGeneral
+    ConfigHarmonize, ConfigMap, ConfigGenerate
 
 from zb_msc_classificator.config.config_datamodel import TrainingSource
 import os
 
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import scan
+
+from zbqueryparser import QueryParser
+
+from datetime import datetime
 
 
 class MapElastic:
@@ -18,7 +22,12 @@ class MapElastic:
     future extensions can include other metadata information in connection to
     this datablob
     """
-    def __init__(self, config):
+    def __init__(
+            self,
+            config: ConfigMap = ConfigMap(
+                store_data=True
+            )
+    ):
         """
         set up for downloading data from elastic search and storing excerpt
         onto local file
@@ -26,6 +35,7 @@ class MapElastic:
         """
         self.config = config
         self.tools = Toolbox()
+        self.es = self.get_elastic_credentials()
 
         self.previous_dataset_exists = self.check_for_datablob()
         if self.previous_dataset_exists:
@@ -37,7 +47,7 @@ class MapElastic:
 
         self.latest_id = self.get_latest_id()
         self.query = self.get_query(
-            data_size=config.data_size
+            zbmath_query=self.get_zbmath_query()
         )
 
     def execute(self):
@@ -49,7 +59,7 @@ class MapElastic:
         to disk
         """
         new_data = self.get_data(
-            elastic_credentials=self.get_elastic_credentials(),
+            elastic_credentials=self.es,
             query=self.query,
             index=self.config.admin_config.elastic.index_name
         )
@@ -93,38 +103,41 @@ class MapElastic:
         else:
             return 0
 
-    def get_query(self, data_size: int):
+    def get_query(self, zbmath_query: str):
         """
-        de range query
-        :param data_size: how big is the intervall window
-        (latest stored de, latest stored de+data_size]
         :return: query for elastic search
         """
-        if not isinstance(data_size, int):
-            raise ValueError(f"cant get any data, "
-                             f"if data_size is set to {data_size}!")
-        up = self.latest_id + data_size
-        return {
-            "query": {
-                'function_score': {
-                    'query': {
-                        'bool': {
-                            'must': {
-                                'range': {
-                                    'de': {
-                                        'gt': self.latest_id,
-                                        'lte': up
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    'field_value_factor': {
-                        'field': 'score_linear'
-                    }
-                }
-            }
-        }
+        elastic_query = QueryParser(
+            es=self.es,
+            es_index_meta=self.config.admin_config.elastic.meta_index
+        ).compile(
+            index=self.config.admin_config.elastic.index_name,
+            user_query=zbmath_query
+        )
+        elastic_query.pop("from", None)
+        elastic_query.pop("size", None)
+
+        return elastic_query
+
+    def get_zbmath_query(self):
+        zbmath_queries = []
+        if self.config.filter_documents.publication_year_start is not None:
+            zbmath_queries.append(
+                f"py:{self.config.filter_documents.publication_year_start}-"
+                f"{datetime.now().year}"
+            )
+        if self.config.filter_documents.state is not None:
+            zbmath_queries.append(
+                f"st:{self.config.filter_documents.state}"
+            )
+        if self.config.diff_only:
+            zbmath_queries.append(
+                f"de:{self.latest_id}-{self.latest_id+self.config.data_size}"
+            )
+        if len(zbmath_queries):
+            return " & ".join(zbmath_queries)
+        else:
+            raise ValueError("no query defined!")
 
     def get_elastic_credentials(self):
         """

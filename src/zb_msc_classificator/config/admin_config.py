@@ -21,6 +21,7 @@ class Elastic(BaseModel):
     es_host: str = None
     es_port: str = None
     index_name: str = None
+    meta_index: str = None
 
 
 class FilePaths(BaseModel):
