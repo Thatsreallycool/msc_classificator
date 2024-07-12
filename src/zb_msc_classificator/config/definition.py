@@ -2,14 +2,13 @@ from pydantic import BaseModel, ValidationError, validator, \
     FilePath, DirectoryPath
 import os
 
-from zb_msc_classificator.tools import Toolbox
-
 import nltk
-
+from zb_msc_classificator.tools import Toolbox
 import zb_msc_classificator as zbc
 from zb_msc_classificator.config.config_datamodel \
-    import AdminConfig, FilePaths, \
-    TrainingSource, Elastic, Language, ApiConfig, FilterDocuments
+    import TrainingSource, Language, FilterDocuments
+from zb_msc_classificator.config.admin_config \
+    import AdminConfig, FilePaths, Elastic, ApiConfig
 
 from typing import List
 
@@ -120,3 +119,7 @@ class ConfigHarmonize(ConfigGeneral):
             package_path = os.path.dirname(zbc.__file__)
             nltk.data.path = [f"{package_path}/../nltk_data"]
         return use_stopwords
+
+    @validator("custom_stopwords_filepath", always=True)
+    def prefix_project_path(cls, custom_path):
+        return f"{os.path.dirname(zbc.__file__)}/..{custom_path}"

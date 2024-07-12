@@ -186,7 +186,7 @@ class GenerateMap:
         self.tools = Toolbox()
         self.harmonize = Harmonizer(
             config=ConfigHarmonize(
-                use_stopwords=False
+                use_stopwords=True
             )
         )
 
@@ -207,7 +207,7 @@ class GenerateMap:
 
         if self.config.store_map:
             self.tools.store_data(
-                filepath=self.config.admin_config.file_paths.map_stored,
+                filepath=self.config.admin_config.file_paths.map,
                 data=lin_map
             )
 
@@ -215,7 +215,7 @@ class GenerateMap:
 
     def get_training_data(self):
         if self.config.training_source == TrainingSource.csv:
-            filepath = self.config.admin_config.file_paths.data_stored
+            filepath = self.config.admin_config.file_paths.data_set
             if not filepath.endswith(".csv"):
                 raise ValueError(f"Training source was chosen to be csv, but "
                                  f"filepath is {filepath}")
@@ -228,20 +228,15 @@ class GenerateMap:
                     )
                 )
         elif self.config.training_source == TrainingSource.elastic_snapshot:
-            filepath = self.config.admin_config.file_paths.data_stored
-            if filepath.endswith(('.pickle', '.gz')):
-                data = self.tools.load_data(filepath=filepath)
-                return [
-                    (
-                        self.harmonization_protocol(data=item["keywords"]),
-                        item["mscs"]
-                    )
-                    for item in data.values()
-                ]
-            else:
-                raise ValueError(f"training source was chosen to be a "
-                                 f"snapshot from elastic, but filename was: "
-                                 f"{filepath}. Should be either gz or pickle.")
+            filepath = self.config.admin_config.file_paths.data_set
+            data = self.tools.load_data(filepath=filepath)
+            return [
+                (
+                    self.harmonization_protocol(data=item["keywords"]),
+                    item["mscs"]
+                )
+                for item in data.values()
+            ]
         elif self.config.training_source == TrainingSource.elastic_live:
             map_elastic = MapElastic(config=self.config)
             map_elastic.execute()

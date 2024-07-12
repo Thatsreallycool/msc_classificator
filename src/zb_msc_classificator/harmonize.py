@@ -41,9 +41,7 @@ class Harmonizer:
             nltk_stopwords = []
 
         all_stopwords = nltk_stopwords + self.tools.txt_load(
-            filepath=self.tools.get_project_path(
-                project_folder=self.config.custom_stopwords_filepath
-            )
+            filepath=self.config.custom_stopwords_filepath
         )
         return list(set(all_stopwords))
 

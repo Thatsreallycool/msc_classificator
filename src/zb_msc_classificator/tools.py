@@ -263,14 +263,8 @@ class Toolbox:
             raise ValueError("this file extension is unknown!")
 
     @staticmethod
-    def get_project_path(project_folder: str = None):
-        project_path = os.path.dirname(zb_msc_classificator.__file__)
-        if project_folder is None:
-            return f"{project_path}/"
-        elif isinstance(project_folder, str):
-            return f"{project_path}/{project_folder.strip('/')}/"
-        else:
-            raise TypeError("project folder must be a string!")
+    def get_project_path():
+        return os.path.dirname(zb_msc_classificator.__file__)
 
     @staticmethod
     def read_ini_file(file_path: str):
