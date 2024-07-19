@@ -16,6 +16,7 @@ import zb_msc_classificator
 
 from configparser import ConfigParser
 
+from pydantic import FilePath
 
 class Serialize(JSONEncoder):
     def iterencode(self, o: Any, _one_shot: bool = ...) -> Iterator[str]:
@@ -140,7 +141,7 @@ class Toolbox:
 
     @staticmethod
     def zip_store(
-            filepath: str,
+            filepath,
             json_data
     ):
         with gzip.open(filepath, 'wt') as fw:
@@ -148,13 +149,13 @@ class Toolbox:
             fw.write("\n")
 
     @staticmethod
-    def zip_load(filepath: str):
+    def zip_load(filepath: FilePath):
         with gzip.open(filepath, 'rb') as fr:
             ungzip = fr.read()
         return json.loads(ungzip.decode())
 
     @staticmethod
-    def txt_load(filepath: str):
+    def txt_load(filepath: FilePath):
         if os.path.isfile(filepath):
             with open(filepath, "r") as file_read:
                 data = file_read.readlines()
@@ -164,7 +165,7 @@ class Toolbox:
 
     @staticmethod
     def txt_store(
-            filepath: str,
+            filepath,
             data
     ):
         if os.path.isfile(filepath):
@@ -174,7 +175,7 @@ class Toolbox:
 
     def pickle_loader(
             self,
-            filepath: str
+            filepath: FilePath
     ):
         if os.path.isfile(filepath):
             with open(filepath, "r") as file_reader:
@@ -185,7 +186,7 @@ class Toolbox:
 
     def pickle_saver(
             self,
-            filepath: str,
+            filepath,
             data
     ):
         with open(filepath, "w") as file_write:
@@ -193,7 +194,7 @@ class Toolbox:
 
     @staticmethod
     def load_csv(
-            filepath: str,
+            filepath: FilePath,
             columns: list,
             delimiter: str
     ):
@@ -212,19 +213,19 @@ class Toolbox:
 
     def load_data(
             self,
-            filepath: str,
+            filepath: FilePath,
             csv_columns: list = None,
             csv_delimiter: str = None
     ):
-        if filepath.endswith(".gz"):
+        if str(filepath).endswith(".gz"):
             return self.zip_load(filepath=filepath)
-        elif filepath.endswith(".pickle"):
+        elif str(filepath).endswith(".pickle"):
             return self.pickle_loader(filepath=filepath)
-        elif filepath.endswith(".json"):
+        elif str(filepath).endswith(".json"):
             return self.load_json(filename=filepath)
-        elif filepath.endswith(".txt"):
+        elif str(filepath).endswith(".txt"):
             return self.txt_load(filepath=filepath)
-        elif filepath.endswith(".csv"):
+        elif str(filepath).endswith(".csv"):
             return self.load_csv(
                 filepath=filepath,
                 columns=csv_columns,
@@ -235,7 +236,7 @@ class Toolbox:
 
     def store_data(
             self,
-            filepath: str,
+            filepath,
             data
     ):
         print(f"data is stored to {filepath}")
@@ -289,3 +290,21 @@ class Toolbox:
             for key in config[section]:
                 my_config[section][key] = config[section][key]
         return my_config
+
+    @staticmethod
+    def transform_data_set_to_list(data_set, subkey):
+        """
+        transforms a data_set in the form of
+        {key: {subkey1: [words, ...], subkey2: [other words, ...], ...}
+        into [words, ...] given the corresponding subkey
+
+        :param data_set: nested dict with identical subkeys in each value
+        :param subkey: the subkey in question
+        :return: list of unique words in the data_set
+        """
+        return set.union(
+            *[
+                set(item[subkey])
+                for item in data_set
+            ]
+        )

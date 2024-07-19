@@ -7,7 +7,7 @@ from zb_msc_classificator.entity_linking import EntityLink
 
 config = ConfigGeneral()
 router = APIRouter()
-el = EntityLink(config=ConfigEntityLinking())
+el = EntityLink()
 
 
 @router.post(path="/entity_linking")

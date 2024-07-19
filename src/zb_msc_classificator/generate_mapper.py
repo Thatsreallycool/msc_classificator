@@ -1,7 +1,7 @@
 from zb_msc_classificator.tools import Toolbox
 from zb_msc_classificator.harmonize import Harmonizer
 from zb_msc_classificator.config.definition import \
-    ConfigHarmonize, ConfigMap, ConfigGenerate
+    ConfigHarmonize, ConfigMap, ConfigGenerate, ConfigGeneral
 
 from zb_msc_classificator.config.config_datamodel import TrainingSource
 import os
@@ -40,7 +40,7 @@ class MapElastic:
         self.previous_dataset_exists = self.check_for_datablob()
         if self.previous_dataset_exists:
             self.data = self.tools.load_data(
-                filepath=self.config.admin_config.file_paths.data_set
+                filepath=self.config.file_paths.data_set
             )
         else:
             self.data = {}
@@ -61,7 +61,7 @@ class MapElastic:
         new_data = self.get_data(
             elastic_credentials=self.es,
             query=self.query,
-            index=self.config.admin_config.elastic.index_name
+            index=self.config.elastic.index_name
         )
         if len(new_data.keys()) == 0:
             print("found no new items. Try bigger data_size!")
@@ -70,7 +70,7 @@ class MapElastic:
             print(f"items collected: {len(self.data.keys())}")
             if self.config.store_data:
                 self.tools.store_data(
-                    filepath=self.config.admin_config.file_paths.data_set,
+                    filepath=self.config.file_paths.data_set,
                     data=self.data
                 )
 
@@ -80,8 +80,10 @@ class MapElastic:
         :return:
         """
         if os.path.isfile(
-            self.config.admin_config.file_paths.data_set
-        ):
+            self.config.file_paths.data_set
+        ) and os.stat(
+            self.config.file_paths.data_set
+        ).st_size > 0:
             return True
         else:
             return False
@@ -109,9 +111,9 @@ class MapElastic:
         """
         elastic_query = QueryParser(
             es=self.es,
-            es_index_meta=self.config.admin_config.elastic.meta_index
+            es_index_meta=self.config.elastic.meta_index
         ).compile(
-            index=self.config.admin_config.elastic.index_name,
+            index=self.config.elastic.index_name,
             user_query=zbmath_query
         )
         elastic_query.pop("from", None)
@@ -146,11 +148,11 @@ class MapElastic:
         """
         return Elasticsearch(
             hosts=[
-                f"{self.config.admin_config.elastic.es_host}:"
-                f"{self.config.admin_config.elastic.es_port}"
+                f"{self.config.elastic.es_host}:"
+                f"{self.config.elastic.es_port}"
             ],
-            api_key=self.config.admin_config.elastic.es_api_key,
-            ca_certs=self.config.admin_config.elastic.ca_certs
+            api_key=self.config.elastic.es_api_key,
+            ca_certs=self.config.elastic.ca_certs
         )
 
     def get_data(self, elastic_credentials, query, index):
@@ -190,7 +192,7 @@ class GenerateMap:
     """
     generates dict {<keyword>: {<msc code>: <int>, ...}, {...}, ... }
     """
-    def __init__(self, config):
+    def __init__(self, config: ConfigGenerate = ConfigGenerate()):
         """
         set up for get data from local disk and store map onto local disk
         :param config:
@@ -220,7 +222,7 @@ class GenerateMap:
 
         if self.config.store_map:
             self.tools.store_data(
-                filepath=self.config.admin_config.file_paths.map,
+                filepath=self.config.file_paths.map,
                 data=lin_map
             )
 
@@ -228,7 +230,7 @@ class GenerateMap:
 
     def get_training_data(self):
         if self.config.training_source == TrainingSource.csv:
-            filepath = self.config.admin_config.file_paths.data_set
+            filepath = self.config.file_paths.data_set
             if not filepath.endswith(".csv"):
                 raise ValueError(f"Training source was chosen to be csv, but "
                                  f"filepath is {filepath}")
@@ -241,7 +243,7 @@ class GenerateMap:
                     )
                 )
         elif self.config.training_source == TrainingSource.elastic_snapshot:
-            filepath = self.config.admin_config.file_paths.data_set
+            filepath = self.config.file_paths.data_set
             data = self.tools.load_data(filepath=filepath)
             return [
                 (

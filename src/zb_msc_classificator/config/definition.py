@@ -1,53 +1,24 @@
 from pydantic import BaseModel, validator, PositiveInt
-from typing import Optional
 import os
 
 import nltk
-from zb_msc_classificator.tools import Toolbox
+
 import zb_msc_classificator as zbc
 from zb_msc_classificator.config.config_datamodel \
     import TrainingSource, Language, FilterDocuments
 from zb_msc_classificator.config.admin_config \
-    import AdminConfig, FilePaths, Elastic, ApiConfig
+    import AdminConfig, FilePaths, Elastic, ApiConfig, ConfigLoader
 
 from typing import List
 
+config_loader = ConfigLoader()
+
 
 class ConfigGeneral(BaseModel):
-    admin_config: AdminConfig = AdminConfig()
+    api_config: ApiConfig = config_loader.get_api()
+    elastic: Elastic = config_loader.get_elastic()
+    file_paths: FilePaths = config_loader.get_filepaths()
     language: Language = Language.english
-
-    @validator("admin_config", pre=True, always=True)
-    def confirm_consistency(cls, cfg_data):
-        filepath_options = [
-            f"{cfg_data.zbmath_path}{cfg_data.config_filename}",
-            f"../../../{cfg_data.config_filename}",
-            f"../../{cfg_data.config_filename}",
-            f"../{cfg_data.config_filename}",
-            cfg_data.config_filename
-        ]
-        viable_paths = [
-            True if os.path.isfile(item)
-            else False
-            for item in filepath_options
-        ]
-        if any(viable_paths):
-            config_filepath = filepath_options[viable_paths.index(True)]
-        else:
-            raise FileNotFoundError("config.ini not found!")
-        admin_cfg = Toolbox().read_ini_file(file_path=config_filepath)
-
-        filepaths = {
-            k: f"{admin_cfg['FILEPATHS']['data_folder']}{v}"
-            for k, v in admin_cfg["FILEPATHS"].items()
-            if not k == 'data_folder'
-        }
-
-        return AdminConfig(
-            api_config=ApiConfig(**admin_cfg["API"]),
-            elastic=Elastic(**admin_cfg["ELASTIC"]),
-            file_paths=FilePaths(**filepaths)
-        )
 
 
 class ConfigMap(ConfigGeneral):
@@ -85,7 +56,6 @@ class ConfigEvaluate(ConfigGeneral):
 
 
 class ConfigEntityLinking(ConfigGeneral):
-    map_file: Optional[str] = None
     ngram_lengths: List[PositiveInt] = [2, 3]
     sparql_link: str = "https://query.wikidata.org/sparql"
 
@@ -105,3 +75,4 @@ class ConfigHarmonize(ConfigGeneral):
     @validator("custom_stopwords_filepath", always=True)
     def prefix_project_path(cls, custom_path):
         return f"{os.path.dirname(zbc.__file__)}/..{custom_path}"
+

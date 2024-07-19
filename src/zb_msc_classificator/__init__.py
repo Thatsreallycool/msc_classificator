@@ -13,13 +13,6 @@
 
 # TODO: testfiles import from ES / matrix?
 
-from zb_msc_classificator.harmonize import Harmonizer
-from zb_msc_classificator.classification import Prediction
-from zb_msc_classificator.evaluation import Evaluate
-from zb_msc_classificator.generate_mapper import MapElastic, GenerateMap
-from zb_msc_classificator.entity_linking import EntityLink
-
-
 import time
 import datetime
 import functools

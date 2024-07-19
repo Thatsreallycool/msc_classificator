@@ -3,8 +3,8 @@ from nltk import ngrams
 from zb_msc_classificator.harmonize import Harmonizer
 from zb_msc_classificator.tools import Toolbox
 
-from zb_msc_classificator.generate_mapper import GenerateMap
-from zb_msc_classificator.config.definition import ConfigGenerate
+from zb_msc_classificator.config.definition \
+    import ConfigEntityLinking, ConfigLoader, AdminConfig
 
 from SPARQLWrapper import SPARQLWrapper, JSON
 
@@ -12,7 +12,7 @@ from SPARQLWrapper import SPARQLWrapper, JSON
 class EntityLink:
     def __init__(
             self,
-            config
+            config: ConfigEntityLinking = ConfigEntityLinking()
     ):
         self.config = config
         self.harmonize = Harmonizer()
@@ -144,7 +144,7 @@ class EntityLink:
         """
 
         entity_list = [
-            item if item in self.map.keys()
+            item if item in self.keywords_allowed
             else None
             for item in entity_list
         ]
@@ -261,13 +261,19 @@ class EntityLink:
 
         return sparql_query_string
 
-    def get_allow_list_keywords(self, generate=False):
-        if generate:
-            gen = GenerateMap(
-                config=ConfigGenerate()
+    def get_allow_list_keywords(self):
+        return self.tools.load_data(
+            filepath=self.config.file_paths.keywords_allowed
+        )
+
+    def generate_allow_list_keywords(self):
+        data_set = self.tools.load_data(
+            filepath=self.config.file_paths.data_set
+        )
+        self.tools.store_data(
+            filepath=self.config.file_paths.keywords_allowed,
+            data=self.tools.transform_data_set_to_list(
+                data_set=data_set,
+                subkey="keywords"
             )
-            return list(gen.execute().keys())
-        else:
-            return self.tools.load_data(
-                filepath=self.config.admin_config.file_paths.keywords_allowed
-            )
+        )
