@@ -10,7 +10,8 @@ index_name = zbmath_live_documents
 meta_index = zbmath_live_meta
 
 [FILEPATHS]
-data_set = <write and read, accepted file types: *.gz, *.pickle, *.bson>
+data_set_classificator = <write and read, accepted file types: *.gz, *.pickle, *.bson>
+data_set_entitylinking = <write and read, accepted file types: *.gz, *.pickle, *.bson>
 keywords_allowed = <write and read, accepted file types: *.gz, *.pickle, *.bson>
 map = <write and read, accepted file types: *.gz, *.pickle, *.bson>
 

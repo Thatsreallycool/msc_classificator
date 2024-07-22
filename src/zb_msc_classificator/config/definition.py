@@ -26,6 +26,7 @@ class ConfigMap(ConfigGeneral):
     diff_only: bool = True
     filter_documents: FilterDocuments = FilterDocuments()
     store_data: bool = False
+    create: str = "classificator"
 
     @validator("data_size", always=True)
     def int_gt0(cls, number):

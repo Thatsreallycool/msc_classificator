@@ -274,7 +274,7 @@ class EntityLink:
 
     def generate_allow_list_keywords(self):
         data_set = self.tools.load_data(
-            filepath=self.config.file_paths.data_set
+            filepath=self.config.file_paths.data_set_entitylinking
         )
         self.tools.store_data(
             filepath=self.config.file_paths.keywords_allowed,

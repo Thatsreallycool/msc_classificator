@@ -35,7 +35,8 @@ class Elastic(BaseModel):
 
 
 class FilePaths(BaseModel):
-    data_set: FilePath
+    data_set_classificator: FilePath
+    data_set_entitylinking: FilePath
     keywords_allowed: FilePath
     map: FilePath
 

@@ -34,13 +34,20 @@ class MapElastic:
         :param config: expects ConfigGenerate()
         """
         self.config = config
+        if config.create == "classificator":
+            self.filename = self.config.file_paths.data_set_classificator
+        elif config.create == "entitylinking":
+            self.filename = self.config.file_paths.data_set_entitylinking
+        else:
+            raise ValueError("choose a file output!")
+
         self.tools = Toolbox()
         self.es = self.get_elastic_credentials()
 
         self.previous_dataset_exists = self.check_for_datablob()
         if self.previous_dataset_exists:
             self.data = self.tools.load_data(
-                filepath=self.config.file_paths.data_set
+                filepath=self.filename
             )
         else:
             self.data = {}
@@ -70,7 +77,7 @@ class MapElastic:
             print(f"items collected: {len(self.data.keys())}")
             if self.config.store_data:
                 self.tools.store_data(
-                    filepath=self.config.file_paths.data_set,
+                    filepath=self.filename,
                     data=self.data
                 )
 
@@ -80,9 +87,9 @@ class MapElastic:
         :return:
         """
         if os.path.isfile(
-            self.config.file_paths.data_set
+            self.filename
         ) and os.stat(
-            self.config.file_paths.data_set
+            self.filename
         ).st_size > 0:
             return True
         else:
@@ -230,7 +237,7 @@ class GenerateMap:
 
     def get_training_data(self):
         if self.config.training_source == TrainingSource.csv:
-            filepath = self.config.file_paths.data_set
+            filepath = self.filename
             if not filepath.endswith(".csv"):
                 raise ValueError(f"Training source was chosen to be csv, but "
                                  f"filepath is {filepath}")
@@ -243,7 +250,7 @@ class GenerateMap:
                     )
                 )
         elif self.config.training_source == TrainingSource.elastic_snapshot:
-            filepath = self.config.file_paths.data_set
+            filepath = self.config.file_paths.data_set_classificator
             data = self.tools.load_data(filepath=filepath)
             return [
                 (
