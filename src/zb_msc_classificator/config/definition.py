@@ -22,14 +22,14 @@ class ConfigGeneral(BaseModel):
 
 
 class ConfigMap(ConfigGeneral):
-    data_size: int = 50000
+    data_size: int = 1000000
     diff_only: bool = True
     filter_documents: FilterDocuments = FilterDocuments()
     store_data: bool = False
 
     @validator("data_size", always=True)
     def int_gt0(cls, number):
-        minimum_jump = 10000
+        minimum_jump = 50000
         if number is None:
             return minimum_jump
         elif number <= 0:
@@ -56,6 +56,7 @@ class ConfigEvaluate(ConfigGeneral):
 
 
 class ConfigEntityLinking(ConfigGeneral):
+    generate_allow_list: bool = False
     ngram_lengths: List[PositiveInt] = [2, 3]
     sparql_link: str = "https://query.wikidata.org/sparql"
 

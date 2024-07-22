@@ -26,12 +26,15 @@ class GenerateFiles:
         for data in todo:
             getattr(self, f"generate_{data}")()
 
-    def generate_data_set(self):
+    @staticmethod
+    def generate_data_set():
         from zb_msc_classificator.generate_mapper import MapElastic
         MapElastic().execute()
 
     def generate_keywords_allowed(self):
-        print("kal!")
+        from zb_msc_classificator.entity_linking import EntityLink
+        from zb_msc_classificator.config.definition import ConfigEntityLinking
+        EntityLink(config=ConfigEntityLinking(generate_allow_list=True))
 
     def generate_map(self):
         print("map!")

@@ -240,6 +240,7 @@ class Toolbox:
             data
     ):
         print(f"data is stored to {filepath}")
+        filepath = str(filepath)
         if filepath.endswith(".gz"):
             self.zip_store(
                 filepath=filepath,
@@ -302,9 +303,11 @@ class Toolbox:
         :param subkey: the subkey in question
         :return: list of unique words in the data_set
         """
-        return set.union(
-            *[
-                set(item[subkey])
-                for item in data_set
-            ]
+        return list(
+            set.union(
+                *[
+                    set(data_set[item][subkey])
+                    for item in data_set
+                ]
+            )
         )

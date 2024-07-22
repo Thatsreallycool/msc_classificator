@@ -8,6 +8,8 @@ from zb_msc_classificator.config.definition \
 
 from SPARQLWrapper import SPARQLWrapper, JSON
 
+import os
+
 
 class EntityLink:
     def __init__(
@@ -17,7 +19,9 @@ class EntityLink:
         self.config = config
         self.harmonize = Harmonizer()
         self.tools = Toolbox()
+
         self.keywords_allowed = self.get_allow_list_keywords()
+
         self.sparql = SPARQLWrapper(endpoint=self.config.sparql_link)
 
     def execute(
@@ -262,6 +266,8 @@ class EntityLink:
         return sparql_query_string
 
     def get_allow_list_keywords(self):
+        if self.config.generate_allow_list:
+            self.generate_allow_list_keywords()
         return self.tools.load_data(
             filepath=self.config.file_paths.keywords_allowed
         )
