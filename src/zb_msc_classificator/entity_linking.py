@@ -283,3 +283,16 @@ class EntityLink:
                 subkey="keywords"
             )
         )
+
+    def preprocessing(self, input_text: str, punctuation_to_remove: list):
+        return self.lemmatization(
+            token_list=self.tokenize(
+                text=self.canonicalize(
+                    text=self.remove_str_from_text(
+                        text=input_text,
+                        to_remove=punctuation_to_remove,
+                        to_replace=" "
+                    )
+                )
+            )
+        )

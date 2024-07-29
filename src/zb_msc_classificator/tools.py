@@ -18,6 +18,7 @@ from configparser import ConfigParser
 
 from pydantic import FilePath
 
+
 class Serialize(JSONEncoder):
     def iterencode(self, o: Any, _one_shot: bool = ...) -> Iterator[str]:
         if isinstance(o, defaultdict):
